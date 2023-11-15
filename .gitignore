@@ -166,3 +166,4 @@ checkpoints
 .lr_find*
 *.npz
 output
+output_synapse_test_continuing
