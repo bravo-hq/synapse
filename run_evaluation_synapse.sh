@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DATASET_PATH=/cabinet/dataset/Synapse/NN-Unet/DATASET_Synapse
-CHECKPOINT_PATH=/home/leon/repos/deformableLKA/3D/output_synapse_test_continuing/
+CHECKPOINT_PATH=/cabinet/yousef/synapse/output_synapse_test_continuing/
 export PYTHONPATH=./
 export RESULTS_FOLDER="$CHECKPOINT_PATH"
 export d_lka_former_preprocessed="$DATASET_PATH"/d_lka_former_raw/d_lka_former_raw_data/Task02_Synapse
