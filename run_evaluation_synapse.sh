@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DATASET_PATH=/home/leon/repos/deformableLKA/3D/DATASET
+DATASET_PATH=/cabinet/dataset/Synapse/NN-Unet/DATASET_Synapse
 CHECKPOINT_PATH=/home/leon/repos/deformableLKA/3D/output_synapse_test_continuing/
 export PYTHONPATH=./
 export RESULTS_FOLDER="$CHECKPOINT_PATH"
