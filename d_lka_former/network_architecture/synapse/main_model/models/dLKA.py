@@ -479,6 +479,7 @@ class Model(SegmentationNetwork):
         dec_cnn_kernel_sizes=None,
         dec_cnn_features=None,
         dec_cnn_dropouts=None,
+        do_ds=True, ############################## YOUSEF HERE
     ):
         super().__init__()
 
@@ -641,7 +642,7 @@ class Model(SegmentationNetwork):
             dropout=0,
         )
         
-        self.do_ds=False ############################## YOUSEF HERE
+        self.do_ds=do_ds ############################## YOUSEF HERE
 
     def forward(self, x):
         x = self.init(x)
@@ -659,4 +660,8 @@ class Model(SegmentationNetwork):
 
         x = torch.concatenate([x, r], dim=1)
         x = self.out(x)
-        return x
+        if self.do_ds:
+            return [x]
+        else:
+            return x
+

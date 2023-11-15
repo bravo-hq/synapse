@@ -77,7 +77,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 5e-2 ############################# YOUSEF HERE
+        self.initial_lr = 1e-2 ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -95,7 +95,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        self.deep_supervision = False ############################# YOUSEF HERE
+        self.deep_supervision = True ############################# YOUSEF HERE
         self.trans_block = trans_block
         self.skip_connections = skip_connections
 
