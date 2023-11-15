@@ -40,6 +40,7 @@ from torch.cuda.amp import autocast
 from d_lka_former.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 from fvcore.nn import FlopCountAnalysis
+from d_lka_former.network_architecture.synapse.main_model.models.dLKA import Model as MainModel
 
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
@@ -76,7 +77,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2
+        self.initial_lr = 5e-2 ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -94,7 +95,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        self.deep_supervision = True
+        self.deep_supervision = False ############################# YOUSEF HERE
         self.trans_block = trans_block
         self.skip_connections = skip_connections
 
@@ -222,18 +223,42 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         Known issue: forgot to set neg_slope=0 in InitWeights_He; should not make a difference though
         :return:
         """
-
-        self.network = D_LKA_Former(
-            in_channels=self.input_channels,
+        ############################# YOUSEF HERE
+        # self.network = D_LKA_Former(
+        #     in_channels=self.input_channels,
+        #     out_channels=self.num_classes,
+        #     img_size=self.crop_size,
+        #     feature_size=16,
+        #     num_heads=4,
+        #     depths=self.depths,  # [3, 3, 3, 3],
+        #     dims=[32, 64, 128, 256],
+        #     do_ds=True,
+        #     trans_block=self.trans_block,
+        #     skip_connections=self.skip_connections,
+        # )
+        self.network=MainModel(
+            spatial_shapes= self.crop_size,
+            in_channels= self.input_channels,
             out_channels=self.num_classes,
-            img_size=self.crop_size,
-            feature_size=16,
-            num_heads=4,
-            depths=self.depths,  # [3, 3, 3, 3],
-            dims=[32, 64, 128, 256],
-            do_ds=True,
-            trans_block=self.trans_block,
-            skip_connections=self.skip_connections,
+            # encoder params
+            cnn_kernel_sizes= [7,5],
+            cnn_features= [8,16],
+            cnn_strides= [2,2],
+            cnn_maxpools= [False, True],
+            cnn_dropouts= 0.0,
+            hyb_kernel_sizes= [5,5,5],
+            hyb_features= [32,64,128],
+            hyb_strides= [2,2,2],
+            hyb_maxpools= [True, True, True],
+            hyb_cnn_dropouts= 0.0,
+            hyb_tf_proj_sizes= [32,64,64],
+            hyb_tf_repeats= [2,2,1],
+            hyb_tf_num_heads= [4,4,4],
+            hyb_tf_dropouts= 0.15,
+
+            # decoder params
+            dec_hyb_tcv_kernel_sizes= [7,7,7],
+            dec_cnn_tcv_kernel_sizes= [7,7],
         )
 
         if torch.cuda.is_available():

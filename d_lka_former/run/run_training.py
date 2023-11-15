@@ -161,6 +161,8 @@ def main():
         "file, for example model_final_checkpoint.model). Will only be used when actually training. "
         "Optional. Beta. Use with caution.",
     )
+    
+    ''' LEON HERE'''
     parser.add_argument(
         "--trans_block",
         default="TransformerBlock",
@@ -260,7 +262,12 @@ def main():
         stage,
         trainer_class,
     ) = get_default_configuration(network, task, network_trainer, plans_identifier)
-
+    print(f"plans_file: {plans_file}")
+    print(f"output_folder_name: {output_folder_name}")
+    print(f"dataset_directory: {dataset_directory}")
+    print(f"batch_dice: {batch_dice}")
+    print(f"stage: {stage}")
+    print(f"trainer_class: {trainer_class}")
     if trainer_class is None:
         raise RuntimeError(
             "Could not find trainer class in d_lka_former.training.network_training"
