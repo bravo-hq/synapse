@@ -79,7 +79,7 @@ def get_default_configuration(
     elif task == "Task002_Synapse":
         plans["plans_per_stage"][Stage]["batch_size"] = 2 #################################### YOUSEF HERE
         plans["plans_per_stage"][Stage]["patch_size"] = np.array([64, 128, 128])
-        plans["plans_per_stage"][Stage]["pool_op_kernel_sizes"] = [
+        plans["plans_per_stage"][Stage]["pool_op_kernel_sizes"] = [     #################################### YOUSEF HERE
             [2, 2, 2],
             [2, 2, 2],
             [2, 2, 2],

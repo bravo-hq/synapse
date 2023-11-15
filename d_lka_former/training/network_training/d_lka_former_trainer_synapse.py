@@ -115,10 +115,10 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             if force_load_plans or (self.plans is None):
                 self.load_plans_file()
 
-            self.plans["plans_per_stage"][self.stage]["pool_op_kernel_sizes"] = [
+            self.plans["plans_per_stage"][self.stage]["pool_op_kernel_sizes"] = [ ############################# YOUSEF HERE
                 [2, 4, 4],
                 [2, 2, 2],
-                [2, 2, 2],
+                [2, 2, 2], 
             ]
             self.process_plans(self.plans)
 
