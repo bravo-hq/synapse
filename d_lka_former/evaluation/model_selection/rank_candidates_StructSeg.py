@@ -30,36 +30,59 @@ if __name__ == "__main__":
     plans = "nnFormerPlans"
 
     overwrite_plans = {
-        'nnFormerTrainerV2_2': ["nnFormerPlans", "nnFormerPlans_customClip"], # r
-        'nnFormerTrainerV2_2_noMirror': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_lessMomentum_noMirror': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_2_structSeg_noMirror': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_2_structSeg': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_lessMomentum_noMirror_structSeg': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror_leakyDecoder': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-        'nnFormerTrainerV2_FabiansResUNet_structSet': ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
-
+        "nnFormerTrainerV2_2": ["nnFormerPlans", "nnFormerPlans_customClip"],  # r
+        "nnFormerTrainerV2_2_noMirror": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_lessMomentum_noMirror": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_2_structSeg_noMirror": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_2_structSeg": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_lessMomentum_noMirror_structSeg": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror_leakyDecoder": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
+        "nnFormerTrainerV2_FabiansResUNet_structSet": [
+            "nnFormerPlans",
+            "nnFormerPlans_customClip",
+        ],  # r
     }
 
-    trainers = ['nnFormerTrainer'] + [
-        'nnFormerTrainerV2_2',
-        'nnFormerTrainerV2_lessMomentum_noMirror',
-        'nnFormerTrainerV2_2_noMirror',
-        'nnFormerTrainerV2_2_structSeg_noMirror',
-        'nnFormerTrainerV2_2_structSeg',
-        'nnFormerTrainerV2_lessMomentum_noMirror_structSeg',
-        'nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror_leakyDecoder',
-        'nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror',
-        'nnFormerTrainerV2_FabiansResUNet_structSet',
+    trainers = ["nnFormerTrainer"] + [
+        "nnFormerTrainerV2_2",
+        "nnFormerTrainerV2_lessMomentum_noMirror",
+        "nnFormerTrainerV2_2_noMirror",
+        "nnFormerTrainerV2_2_structSeg_noMirror",
+        "nnFormerTrainerV2_2_structSeg",
+        "nnFormerTrainerV2_lessMomentum_noMirror_structSeg",
+        "nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror_leakyDecoder",
+        "nnFormerTrainerV2_FabiansResUNet_structSet_NoMirror",
+        "nnFormerTrainerV2_FabiansResUNet_structSet",
     ]
 
-    datasets = \
-        {"Task049_StructSeg2019_Task1_HaN_OAR": ("3d_fullres",  "3d_lowres", "2d"),
+    datasets = {
+        "Task049_StructSeg2019_Task1_HaN_OAR": ("3d_fullres", "3d_lowres", "2d"),
         "Task050_StructSeg2019_Task2_Naso_GTV": ("3d_fullres", "3d_lowres", "2d"),
         "Task051_StructSeg2019_Task3_Thoracic_OAR": ("3d_fullres", "3d_lowres", "2d"),
         "Task052_StructSeg2019_Task4_Lung_GTV": ("3d_fullres", "3d_lowres", "2d"),
-}
+    }
 
     expected_validation_folder = "validation_raw"
     alternative_validation_folder = "validation"
@@ -76,7 +99,7 @@ if __name__ == "__main__":
     valid_trainers = []
     all_trainers = []
 
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write("trainer,")
         for t in datasets.keys():
             s = t[4:7]
@@ -106,17 +129,56 @@ if __name__ == "__main__":
                 f.write("%s," % name)
                 for dataset in datasets.keys():
                     for configuration in datasets[dataset]:
-                        summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (dataset, configuration, trainer, p, expected_validation_folder, folds_str))
+                        summary_file = join(
+                            summary_files_dir,
+                            "%s__%s__%s__%s__%s__%s.json"
+                            % (
+                                dataset,
+                                configuration,
+                                trainer,
+                                p,
+                                expected_validation_folder,
+                                folds_str,
+                            ),
+                        )
                         if not isfile(summary_file):
-                            summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (dataset, configuration, trainer, p, alternative_validation_folder, folds_str))
+                            summary_file = join(
+                                summary_files_dir,
+                                "%s__%s__%s__%s__%s__%s.json"
+                                % (
+                                    dataset,
+                                    configuration,
+                                    trainer,
+                                    p,
+                                    alternative_validation_folder,
+                                    folds_str,
+                                ),
+                            )
                             if not isfile(summary_file):
-                                summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (
-                                dataset, configuration, trainer, p, alternative_alternative_validation_folder, folds_str))
+                                summary_file = join(
+                                    summary_files_dir,
+                                    "%s__%s__%s__%s__%s__%s.json"
+                                    % (
+                                        dataset,
+                                        configuration,
+                                        trainer,
+                                        p,
+                                        alternative_alternative_validation_folder,
+                                        folds_str,
+                                    ),
+                                )
                                 if not isfile(summary_file):
                                     all_present = False
-                                    print(name, dataset, configuration, "has missing summary file")
+                                    print(
+                                        name,
+                                        dataset,
+                                        configuration,
+                                        "has missing summary file",
+                                    )
                         if isfile(summary_file):
-                            result = load_json(summary_file)['results'][interested_in]['mean']['Dice']
+                            result = load_json(summary_file)["results"][interested_in][
+                                "mean"
+                            ]["Dice"]
                             result_per_dataset_here[dataset][configuration] = result
                             f.write("%02.4f," % result)
                         else:
@@ -127,7 +189,9 @@ if __name__ == "__main__":
                     valid_trainers.append(name)
                     for d in datasets:
                         for c in datasets[d]:
-                            result_per_dataset[d][c].append(result_per_dataset_here[d][c])
+                            result_per_dataset[d][c].append(
+                                result_per_dataset_here[d][c]
+                            )
 
     invalid_trainers = [i for i in all_trainers if i not in valid_trainers]
 
@@ -145,7 +209,9 @@ if __name__ == "__main__":
 
     ranks_arr = np.zeros_like(all_res)
     for d in range(ranks_arr.shape[1]):
-        temp = np.argsort(all_res[:, d])[::-1] # inverse because we want the highest dice to be rank0
+        temp = np.argsort(all_res[:, d])[
+            ::-1
+        ]  # inverse because we want the highest dice to be rank0
         ranks = np.empty_like(temp)
         ranks[temp] = np.arange(len(temp))
 

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     summary_files_dir = join(network_training_output_dir, "summary_jsons_fold0_new")
     output_file = join(network_training_output_dir, "summary_cascade.csv")
 
-    folds = (0, )
+    folds = (0,)
     folds_str = ""
     for f in folds:
         folds_str += str(f)
@@ -30,20 +30,20 @@ if __name__ == "__main__":
     plans = "nnFormerPlansv2.1"
 
     overwrite_plans = {
-        'nnFormerTrainerCascadeFullRes': ['nnFormerPlans'],
+        "nnFormerTrainerCascadeFullRes": ["nnFormerPlans"],
     }
 
     trainers = [
-        'nnFormerTrainerCascadeFullRes',
-        'nnFormerTrainerV2CascadeFullRes_EducatedGuess',
-        'nnFormerTrainerV2CascadeFullRes_EducatedGuess2',
-        'nnFormerTrainerV2CascadeFullRes_EducatedGuess3',
-        'nnFormerTrainerV2CascadeFullRes_lowerLR',
-        'nnFormerTrainerV2CascadeFullRes',
-        'nnFormerTrainerV2CascadeFullRes_noConnComp',
-        'nnFormerTrainerV2CascadeFullRes_shorter_lowerLR',
-        'nnFormerTrainerV2CascadeFullRes_shorter',
-        'nnFormerTrainerV2CascadeFullRes_smallerBinStrel',
+        "nnFormerTrainerCascadeFullRes",
+        "nnFormerTrainerV2CascadeFullRes_EducatedGuess",
+        "nnFormerTrainerV2CascadeFullRes_EducatedGuess2",
+        "nnFormerTrainerV2CascadeFullRes_EducatedGuess3",
+        "nnFormerTrainerV2CascadeFullRes_lowerLR",
+        "nnFormerTrainerV2CascadeFullRes",
+        "nnFormerTrainerV2CascadeFullRes_noConnComp",
+        "nnFormerTrainerV2CascadeFullRes_shorter_lowerLR",
+        "nnFormerTrainerV2CascadeFullRes_shorter",
+        "nnFormerTrainerV2CascadeFullRes_smallerBinStrel",
         #'',
         #'',
         #'',
@@ -52,21 +52,20 @@ if __name__ == "__main__":
         #'',
     ]
 
-    datasets = \
-        {
-        "Task003_Liver": ("3d_cascade_fullres", ),
-        "Task006_Lung": ("3d_cascade_fullres", ),
-        "Task007_Pancreas": ("3d_cascade_fullres", ),
-        "Task008_HepaticVessel": ("3d_cascade_fullres", ),
-        "Task009_Spleen": ("3d_cascade_fullres", ),
-        "Task010_Colon": ("3d_cascade_fullres", ),
-        "Task017_AbdominalOrganSegmentation": ("3d_cascade_fullres", ),
-        #"Task029_LITS": ("3d_cascade_fullres", ),
-        "Task048_KiTS_clean": ("3d_cascade_fullres", ),
-        "Task055_SegTHOR": ("3d_cascade_fullres", ),
-        "Task056_VerSe": ("3d_cascade_fullres", ),
-        #"": ("3d_cascade_fullres", ),
-        }
+    datasets = {
+        "Task003_Liver": ("3d_cascade_fullres",),
+        "Task006_Lung": ("3d_cascade_fullres",),
+        "Task007_Pancreas": ("3d_cascade_fullres",),
+        "Task008_HepaticVessel": ("3d_cascade_fullres",),
+        "Task009_Spleen": ("3d_cascade_fullres",),
+        "Task010_Colon": ("3d_cascade_fullres",),
+        "Task017_AbdominalOrganSegmentation": ("3d_cascade_fullres",),
+        # "Task029_LITS": ("3d_cascade_fullres", ),
+        "Task048_KiTS_clean": ("3d_cascade_fullres",),
+        "Task055_SegTHOR": ("3d_cascade_fullres",),
+        "Task056_VerSe": ("3d_cascade_fullres",),
+        # "": ("3d_cascade_fullres", ),
+    }
 
     expected_validation_folder = "validation_raw"
     alternative_validation_folder = "validation"
@@ -83,7 +82,7 @@ if __name__ == "__main__":
     valid_trainers = []
     all_trainers = []
 
-    with open(output_file, 'w') as f:
+    with open(output_file, "w") as f:
         f.write("trainer,")
         for t in datasets.keys():
             s = t[4:7]
@@ -109,17 +108,56 @@ if __name__ == "__main__":
                 f.write("%s," % name)
                 for dataset in datasets.keys():
                     for configuration in datasets[dataset]:
-                        summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (dataset, configuration, trainer, p, expected_validation_folder, folds_str))
+                        summary_file = join(
+                            summary_files_dir,
+                            "%s__%s__%s__%s__%s__%s.json"
+                            % (
+                                dataset,
+                                configuration,
+                                trainer,
+                                p,
+                                expected_validation_folder,
+                                folds_str,
+                            ),
+                        )
                         if not isfile(summary_file):
-                            summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (dataset, configuration, trainer, p, alternative_validation_folder, folds_str))
+                            summary_file = join(
+                                summary_files_dir,
+                                "%s__%s__%s__%s__%s__%s.json"
+                                % (
+                                    dataset,
+                                    configuration,
+                                    trainer,
+                                    p,
+                                    alternative_validation_folder,
+                                    folds_str,
+                                ),
+                            )
                             if not isfile(summary_file):
-                                summary_file = join(summary_files_dir, "%s__%s__%s__%s__%s__%s.json" % (
-                                dataset, configuration, trainer, p, alternative_alternative_validation_folder, folds_str))
+                                summary_file = join(
+                                    summary_files_dir,
+                                    "%s__%s__%s__%s__%s__%s.json"
+                                    % (
+                                        dataset,
+                                        configuration,
+                                        trainer,
+                                        p,
+                                        alternative_alternative_validation_folder,
+                                        folds_str,
+                                    ),
+                                )
                                 if not isfile(summary_file):
                                     all_present = False
-                                    print(name, dataset, configuration, "has missing summary file")
+                                    print(
+                                        name,
+                                        dataset,
+                                        configuration,
+                                        "has missing summary file",
+                                    )
                         if isfile(summary_file):
-                            result = load_json(summary_file)['results'][interested_in]['mean']['Dice']
+                            result = load_json(summary_file)["results"][interested_in][
+                                "mean"
+                            ]["Dice"]
                             result_per_dataset_here[dataset][configuration] = result
                             f.write("%02.4f," % result)
                         else:
@@ -132,7 +170,9 @@ if __name__ == "__main__":
                     valid_trainers.append(name)
                     for d in datasets:
                         for c in datasets[d]:
-                            result_per_dataset[d][c].append(result_per_dataset_here[d][c])
+                            result_per_dataset[d][c].append(
+                                result_per_dataset_here[d][c]
+                            )
 
     invalid_trainers = [i for i in all_trainers if i not in valid_trainers]
 
@@ -150,7 +190,9 @@ if __name__ == "__main__":
 
     ranks_arr = np.zeros_like(all_res)
     for d in range(ranks_arr.shape[1]):
-        temp = np.argsort(all_res[:, d])[::-1] # inverse because we want the highest dice to be rank0
+        temp = np.argsort(all_res[:, d])[
+            ::-1
+        ]  # inverse because we want the highest dice to be rank0
         ranks = np.empty_like(temp)
         ranks[temp] = np.arange(len(temp))
 

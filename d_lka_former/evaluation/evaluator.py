@@ -23,7 +23,11 @@ import numpy as np
 import pandas as pd
 import SimpleITK as sitk
 from d_lka_former.evaluation.metrics import ConfusionMatrix, ALL_METRICS
-from batchgenerators.utilities.file_and_folder_operations import save_json, subfiles, join
+from batchgenerators.utilities.file_and_folder_operations import (
+    save_json,
+    subfiles,
+    join,
+)
 from collections import OrderedDict
 
 
@@ -48,24 +52,25 @@ class Evaluator:
         "False Discovery Rate",
         "Total Positives Test",
         "Total Positives Reference",
-        #"Hausdorff Distance 95" # LEON ADDED THIS
+        # "Hausdorff Distance 95" # LEON ADDED THIS
     ]
 
     default_advanced_metrics = [
-        #"Hausdorff Distance",
-        #"Hausdorff Distance 95",
-        #"Avg. Surface Distance",
-        #"Avg. Symmetric Surface Distance"
+        # "Hausdorff Distance",
+        # "Hausdorff Distance 95",
+        # "Avg. Surface Distance",
+        # "Avg. Symmetric Surface Distance"
     ]
 
-    def __init__(self,
-                 test=None,
-                 reference=None,
-                 labels=None,
-                 metrics=None,
-                 advanced_metrics=None,
-                 nan_for_nonexisting=True):
-
+    def __init__(
+        self,
+        test=None,
+        reference=None,
+        labels=None,
+        metrics=None,
+        advanced_metrics=None,
+        nan_for_nonexisting=True,
+    ):
         self.test = None
         self.reference = None
         self.confusion_matrix = ConfusionMatrix()
@@ -121,7 +126,11 @@ class Evaluator:
         elif isinstance(labels, (list, tuple)):
             self.labels = labels
         else:
-            raise TypeError("Can only handle dict, list, tuple, set & numpy array, but input is of type {}".format(type(labels)))
+            raise TypeError(
+                "Can only handle dict, list, tuple, set & numpy array, but input is of type {}".format(
+                    type(labels)
+                )
+            )
 
     def construct_labels(self):
         """Construct label set from unique entries in segmentations."""
@@ -131,8 +140,7 @@ class Evaluator:
         elif self.test is None:
             labels = np.unique(self.reference)
         else:
-            labels = np.union1d(np.unique(self.test),
-                                np.unique(self.reference))
+            labels = np.union1d(np.unique(self.test), np.unique(self.reference))
         self.labels = list(map(lambda x: int(x), labels))
 
     def set_metrics(self, metrics):
@@ -143,10 +151,13 @@ class Evaluator:
         elif isinstance(metrics, (list, tuple, np.ndarray)):
             self.metrics = metrics
         else:
-            raise TypeError("Can only handle list, tuple, set & numpy array, but input is of type {}".format(type(metrics)))
+            raise TypeError(
+                "Can only handle list, tuple, set & numpy array, but input is of type {}".format(
+                    type(metrics)
+                )
+            )
 
     def add_metric(self, metric):
-
         if metric not in self.metrics:
             self.metrics.append(metric)
 
@@ -181,7 +192,8 @@ class Evaluator:
                     continue
                 else:
                     raise NotImplementedError(
-                        "Metric {} not implemented.".format(metric))
+                        "Metric {} not implemented.".format(metric)
+                    )
 
         # get results
         self.result = OrderedDict()
@@ -191,7 +203,6 @@ class Evaluator:
             eval_metrics += self.advanced_metrics
 
         if isinstance(self.labels, dict):
-
             for label, name in self.labels.items():
                 k = str(name)
                 self.result[k] = OrderedDict()
@@ -202,31 +213,33 @@ class Evaluator:
                     current_test = 0
                     current_reference = 0
                     for l in label:
-                        current_test += (self.test == l)
-                        current_reference += (self.reference == l)
+                        current_test += self.test == l
+                        current_reference += self.reference == l
                     self.confusion_matrix.set_test(current_test)
                     self.confusion_matrix.set_reference(current_reference)
                 for metric in eval_metrics:
-                    self.result[k][metric] = _funcs[metric](confusion_matrix=self.confusion_matrix,
-                                                               nan_for_nonexisting=self.nan_for_nonexisting,
-                                                               **metric_kwargs)
+                    self.result[k][metric] = _funcs[metric](
+                        confusion_matrix=self.confusion_matrix,
+                        nan_for_nonexisting=self.nan_for_nonexisting,
+                        **metric_kwargs
+                    )
 
         else:
-
             for i, l in enumerate(self.labels):
                 k = str(l)
                 self.result[k] = OrderedDict()
                 self.confusion_matrix.set_test(self.test == l)
                 self.confusion_matrix.set_reference(self.reference == l)
                 for metric in eval_metrics:
-                    self.result[k][metric] = _funcs[metric](confusion_matrix=self.confusion_matrix,
-                                                            nan_for_nonexisting=self.nan_for_nonexisting,
-                                                            **metric_kwargs)
+                    self.result[k][metric] = _funcs[metric](
+                        confusion_matrix=self.confusion_matrix,
+                        nan_for_nonexisting=self.nan_for_nonexisting,
+                        **metric_kwargs
+                    )
 
         return self.result
 
     def to_dict(self):
-
         if self.result is None:
             self.evaluate()
         return self.result
@@ -268,9 +281,7 @@ class Evaluator:
 
 
 class NiftiEvaluator(Evaluator):
-
     def __init__(self, *args, **kwargs):
-
         self.test_nifti = None
         self.reference_nifti = None
         super(NiftiEvaluator, self).__init__(*args, **kwargs)
@@ -280,7 +291,9 @@ class NiftiEvaluator(Evaluator):
 
         if test is not None:
             self.test_nifti = sitk.ReadImage(test)
-            super(NiftiEvaluator, self).set_test(sitk.GetArrayFromImage(self.test_nifti))
+            super(NiftiEvaluator, self).set_test(
+                sitk.GetArrayFromImage(self.test_nifti)
+            )
         else:
             self.test_nifti = None
             super(NiftiEvaluator, self).set_test(test)
@@ -290,13 +303,14 @@ class NiftiEvaluator(Evaluator):
 
         if reference is not None:
             self.reference_nifti = sitk.ReadImage(reference)
-            super(NiftiEvaluator, self).set_reference(sitk.GetArrayFromImage(self.reference_nifti))
+            super(NiftiEvaluator, self).set_reference(
+                sitk.GetArrayFromImage(self.reference_nifti)
+            )
         else:
             self.reference_nifti = None
             super(NiftiEvaluator, self).set_reference(reference)
 
     def evaluate(self, test=None, reference=None, voxel_spacing=None, **metric_kwargs):
-
         if voxel_spacing is None:
             voxel_spacing = np.array(self.test_nifti.GetSpacing())[::-1]
             metric_kwargs["voxel_spacing"] = voxel_spacing
@@ -319,17 +333,19 @@ def run_evaluation(args):
     return current_scores
 
 
-def aggregate_scores(test_ref_pairs,
-                     evaluator=NiftiEvaluator,
-                     labels=None,
-                     nanmean=True,
-                     json_output_file=None,
-                     json_name="",
-                     json_description="",
-                     json_author="Fabian",
-                     json_task="",
-                     num_threads=2,
-                     **metric_kwargs):
+def aggregate_scores(
+    test_ref_pairs,
+    evaluator=NiftiEvaluator,
+    labels=None,
+    nanmean=True,
+    json_output_file=None,
+    json_name="",
+    json_description="",
+    json_author="Fabian",
+    json_task="",
+    num_threads=2,
+    **metric_kwargs
+):
     """
     test = predicted image
     :param test_ref_pairs:
@@ -358,7 +374,10 @@ def aggregate_scores(test_ref_pairs,
     test = [i[0] for i in test_ref_pairs]
     ref = [i[1] for i in test_ref_pairs]
     p = Pool(num_threads)
-    all_res = p.map(run_evaluation, zip(test, ref, [evaluator]*len(ref), [metric_kwargs]*len(ref)))
+    all_res = p.map(
+        run_evaluation,
+        zip(test, ref, [evaluator] * len(ref), [metric_kwargs] * len(ref)),
+    )
     p.close()
     p.join()
 
@@ -379,9 +398,13 @@ def aggregate_scores(test_ref_pairs,
     for label in all_scores["mean"]:
         for score in all_scores["mean"][label]:
             if nanmean:
-                all_scores["mean"][label][score] = float(np.nanmean(all_scores["mean"][label][score]))
+                all_scores["mean"][label][score] = float(
+                    np.nanmean(all_scores["mean"][label][score])
+                )
             else:
-                all_scores["mean"][label][score] = float(np.mean(all_scores["mean"][label][score]))
+                all_scores["mean"][label][score] = float(
+                    np.mean(all_scores["mean"][label][score])
+                )
 
     # save to file if desired
     # we create a hopefully unique id by hashing the entire output dictionary
@@ -394,23 +417,25 @@ def aggregate_scores(test_ref_pairs,
         json_dict["task"] = json_task
         json_dict["author"] = json_author
         json_dict["results"] = all_scores
-        json_dict["id"] = hashlib.md5(json.dumps(json_dict).encode("utf-8")).hexdigest()[:12]
+        json_dict["id"] = hashlib.md5(
+            json.dumps(json_dict).encode("utf-8")
+        ).hexdigest()[:12]
         save_json(json_dict, json_output_file)
-
 
     return all_scores
 
 
-def aggregate_scores_for_experiment(score_file,
-                                    labels=None,
-                                    metrics=Evaluator.default_metrics,
-                                    nanmean=True,
-                                    json_output_file=None,
-                                    json_name="",
-                                    json_description="",
-                                    json_author="Fabian",
-                                    json_task=""):
-
+def aggregate_scores_for_experiment(
+    score_file,
+    labels=None,
+    metrics=Evaluator.default_metrics,
+    nanmean=True,
+    json_output_file=None,
+    json_name="",
+    json_description="",
+    json_author="Fabian",
+    json_task="",
+):
     scores = np.load(score_file)
     scores_mean = scores.mean(0)
     if labels is None:
@@ -435,7 +460,9 @@ def aggregate_scores_for_experiment(score_file,
     json_dict["task"] = json_task
     json_dict["author"] = json_author
     json_dict["results"] = {"all": results, "mean": results_mean}
-    json_dict["id"] = hashlib.md5(json.dumps(json_dict).encode("utf-8")).hexdigest()[:12]
+    json_dict["id"] = hashlib.md5(json.dumps(json_dict).encode("utf-8")).hexdigest()[
+        :12
+    ]
     if json_output_file is not None:
         json_output_file = open(json_output_file, "w")
         json.dump(json_dict, json_output_file, indent=4, separators=(",", ": "))
@@ -444,7 +471,9 @@ def aggregate_scores_for_experiment(score_file,
     return json_dict
 
 
-def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: tuple, **metric_kwargs):
+def evaluate_folder(
+    folder_with_gts: str, folder_with_predictions: str, labels: tuple, **metric_kwargs
+):
     """
     writes a summary.json to folder_with_predictions
     :param folder_with_gts: folder where the ground truth segmentations are saved. Must be nifti files.
@@ -454,31 +483,58 @@ def evaluate_folder(folder_with_gts: str, folder_with_predictions: str, labels: 
     """
     files_gt = subfiles(folder_with_gts, suffix=".nii.gz", join=False)
     files_pred = subfiles(folder_with_predictions, suffix=".nii.gz", join=False)
-    assert all([i in files_pred for i in files_gt]), "files missing in folder_with_predictions"
+    assert all(
+        [i in files_pred for i in files_gt]
+    ), "files missing in folder_with_predictions"
     assert all([i in files_gt for i in files_pred]), "files missing in folder_with_gts"
-    test_ref_pairs = [(join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_pred]
-    res = aggregate_scores(test_ref_pairs, json_output_file=join(folder_with_predictions, "summary.json"),
-                           num_threads=8, labels=labels, **metric_kwargs)
+    test_ref_pairs = [
+        (join(folder_with_predictions, i), join(folder_with_gts, i)) for i in files_pred
+    ]
+    res = aggregate_scores(
+        test_ref_pairs,
+        json_output_file=join(folder_with_predictions, "summary.json"),
+        num_threads=8,
+        labels=labels,
+        **metric_kwargs
+    )
     return res
 
 
 def nnformer_evaluate_folder():
     import argparse
-    parser = argparse.ArgumentParser("Evaluates the segmentations located in the folder pred. Output of this script is "
-                                     "a json file. At the very bottom of the json file is going to be a 'mean' "
-                                     "entry with averages metrics across all cases")
-    parser.add_argument('-ref', required=True, type=str, help="Folder containing the reference segmentations in nifti "
-                                                              "format.")
-    parser.add_argument('-pred', required=True, type=str, help="Folder containing the predicted segmentations in nifti "
-                                                               "format. File names must match between the folders!")
-    parser.add_argument('-l', nargs='+', type=int, required=True, help="List of label IDs (integer values) that should "
-                                                                       "be evaluated. Best practice is to use all int "
-                                                                       "values present in the dataset, so for example "
-                                                                       "for LiTS the labels are 0: background, 1: "
-                                                                       "liver, 2: tumor. So this argument "
-                                                                       "should be -l 1 2. You can if you want also "
-                                                                       "evaluate the background label (0) but in "
-                                                                       "this case that would not gie any useful "
-                                                                       "information.")
+
+    parser = argparse.ArgumentParser(
+        "Evaluates the segmentations located in the folder pred. Output of this script is "
+        "a json file. At the very bottom of the json file is going to be a 'mean' "
+        "entry with averages metrics across all cases"
+    )
+    parser.add_argument(
+        "-ref",
+        required=True,
+        type=str,
+        help="Folder containing the reference segmentations in nifti " "format.",
+    )
+    parser.add_argument(
+        "-pred",
+        required=True,
+        type=str,
+        help="Folder containing the predicted segmentations in nifti "
+        "format. File names must match between the folders!",
+    )
+    parser.add_argument(
+        "-l",
+        nargs="+",
+        type=int,
+        required=True,
+        help="List of label IDs (integer values) that should "
+        "be evaluated. Best practice is to use all int "
+        "values present in the dataset, so for example "
+        "for LiTS the labels are 0: background, 1: "
+        "liver, 2: tumor. So this argument "
+        "should be -l 1 2. You can if you want also "
+        "evaluate the background label (0) but in "
+        "this case that would not gie any useful "
+        "information.",
+    )
     args = parser.parse_args()
     return evaluate_folder(args.ref, args.pred, args.l)

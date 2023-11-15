@@ -13,7 +13,9 @@
 #    limitations under the License.
 
 import numpy as np
-from d_lka_former.experiment_planning.experiment_planner_baseline_3DUNet import ExperimentPlanner
+from d_lka_former.experiment_planning.experiment_planner_baseline_3DUNet import (
+    ExperimentPlanner,
+)
 from d_lka_former.paths import *
 
 
@@ -21,8 +23,10 @@ class ExperimentPlannerTargetSpacingForAnisoAxis(ExperimentPlanner):
     def __init__(self, folder_with_cropped_data, preprocessed_output_folder):
         super().__init__(folder_with_cropped_data, preprocessed_output_folder)
         self.data_identifier = "nnFormerData_targetSpacingForAnisoAxis"
-        self.plans_fname = join(self.preprocessed_output_folder,
-                                "nnFormerPlans" + "targetSpacingForAnisoAxis_plans_3D.pkl")
+        self.plans_fname = join(
+            self.preprocessed_output_folder,
+            "nnFormerPlans" + "targetSpacingForAnisoAxis_plans_3D.pkl",
+        )
 
     def get_target_spacing(self):
         """
@@ -34,8 +38,8 @@ class ExperimentPlannerTargetSpacingForAnisoAxis(ExperimentPlanner):
         resolution axis. Choosing the median here will result in bad interpolation artifacts that can substantially
         impact performance (due to the low number of slices).
         """
-        spacings = self.dataset_properties['all_spacings']
-        sizes = self.dataset_properties['all_sizes']
+        spacings = self.dataset_properties["all_spacings"]
+        sizes = self.dataset_properties["all_sizes"]
 
         target = np.percentile(np.vstack(spacings), self.target_spacing_percentile, 0)
         target_size = np.percentile(np.vstack(sizes), self.target_spacing_percentile, 0)
@@ -50,14 +54,17 @@ class ExperimentPlannerTargetSpacingForAnisoAxis(ExperimentPlanner):
         other_spacings = [target[i] for i in other_axes]
         other_sizes = [target_size[i] for i in other_axes]
 
-        has_aniso_spacing = target[worst_spacing_axis] > (self.anisotropy_threshold * max(other_spacings))
-        has_aniso_voxels = target_size[worst_spacing_axis] * self.anisotropy_threshold < max(other_sizes)
+        has_aniso_spacing = target[worst_spacing_axis] > (
+            self.anisotropy_threshold * max(other_spacings)
+        )
+        has_aniso_voxels = target_size[
+            worst_spacing_axis
+        ] * self.anisotropy_threshold < max(other_sizes)
         # we don't use the last one for now
-        #median_size_in_mm = target[target_size_mm] * RESAMPLING_SEPARATE_Z_ANISOTROPY_THRESHOLD < max(target_size_mm)
+        # median_size_in_mm = target[target_size_mm] * RESAMPLING_SEPARATE_Z_ANISOTROPY_THRESHOLD < max(target_size_mm)
 
         if has_aniso_spacing and has_aniso_voxels:
             spacings_of_that_axis = np.vstack(spacings)[:, worst_spacing_axis]
             target_spacing_of_that_axis = np.percentile(spacings_of_that_axis, 10)
             target[worst_spacing_axis] = target_spacing_of_that_axis
         return target
-

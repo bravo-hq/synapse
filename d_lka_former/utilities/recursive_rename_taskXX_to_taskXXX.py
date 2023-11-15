@@ -28,6 +28,7 @@ def recursive_rename(folder):
     for ss in s:
         recursive_rename(ss)
 
+
 if __name__ == "__main__":
     recursive_rename("/media/fabian/Results/nnFormer")
     recursive_rename("/media/fabian/d_lka_former")
@@ -37,5 +38,6 @@ if __name__ == "__main__":
     recursive_rename("/home/fabian/drives/datasets/nnFormer_testSets")
     recursive_rename("/home/fabian/drives/datasets/results/nnFormer")
     recursive_rename("/home/fabian/drives/e230-dgx2-1-data_fabian/Decathlon_raw")
-    recursive_rename("/home/fabian/drives/e230-dgx2-1-data_fabian/nnFormer_preprocessed")
-
+    recursive_rename(
+        "/home/fabian/drives/e230-dgx2-1-data_fabian/nnFormer_preprocessed"
+    )

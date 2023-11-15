@@ -2,30 +2,37 @@ from torch import nn
 from typing import Tuple, Union
 from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 from d_lka_former.network_architecture.dynunet_block import UnetOutBlock, UnetResBlock
-from d_lka_former.network_architecture.acdc.model_components import D_LKA_Former_Encoder, UnetrUpBlock
-from d_lka_former.network_architecture.acdc.transformerblock import TransformerBlock, TransformerBlock_3D_single_deform_LKA
+from d_lka_former.network_architecture.acdc.model_components import (
+    D_LKA_Former_Encoder,
+    UnetrUpBlock,
+)
+from d_lka_former.network_architecture.acdc.transformerblock import (
+    TransformerBlock,
+    TransformerBlock_3D_single_deform_LKA,
+)
+
 
 class D_LKA_Former(SegmentationNetwork):
     """
     UNETR++ based on: "Shaker et al.,
     UNETR++: Delving into Efficient and Accurate 3D Medical Image Segmentation"
     """
-    def __init__(
-            self,
-            in_channels: int,
-            out_channels: int,
-            feature_size: int = 16,
-            hidden_size: int = 256,
-            num_heads: int = 4,
-            pos_embed: str = "perceptron",
-            norm_name: Union[Tuple, str] = "instance",
-            dropout_rate: float = 0.0,
-            depths=None,
-            dims=None,
-            conv_op=nn.Conv3d,
-            do_ds=True,
-            trans_block=TransformerBlock_3D_single_deform_LKA,
 
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        feature_size: int = 16,
+        hidden_size: int = 256,
+        num_heads: int = 4,
+        pos_embed: str = "perceptron",
+        norm_name: Union[Tuple, str] = "instance",
+        dropout_rate: float = 0.0,
+        depths=None,
+        dims=None,
+        conv_op=nn.Conv3d,
+        do_ds=True,
+        trans_block=TransformerBlock_3D_single_deform_LKA,
     ) -> None:
         """
         Args:
@@ -54,14 +61,22 @@ class D_LKA_Former(SegmentationNetwork):
             raise AssertionError("dropout_rate should be between 0 and 1.")
 
         if pos_embed not in ["conv", "perceptron"]:
-            raise KeyError(f"Position embedding layer of type {pos_embed} is not supported.")
+            raise KeyError(
+                f"Position embedding layer of type {pos_embed} is not supported."
+            )
 
-        self.feat_size = (2, 5, 5,)
+        self.feat_size = (
+            2,
+            5,
+            5,
+        )
         self.hidden_size = hidden_size
 
         print("Using transformerblock: {}".format(trans_block))
 
-        self.d_lka_former_encoder = D_LKA_Former_Encoder(dims=dims, depths=depths, num_heads=num_heads, trans_block=trans_block)
+        self.d_lka_former_encoder = D_LKA_Former_Encoder(
+            dims=dims, depths=depths, num_heads=num_heads, trans_block=trans_block
+        )
 
         self.encoder1 = UnetResBlock(
             spatial_dims=3,
@@ -78,7 +93,7 @@ class D_LKA_Former(SegmentationNetwork):
             kernel_size=3,
             upsample_kernel_size=2,
             norm_name=norm_name,
-            out_size=4*10*10,
+            out_size=4 * 10 * 10,
             trans_block=trans_block,
         )
         self.decoder4 = UnetrUpBlock(
@@ -88,7 +103,7 @@ class D_LKA_Former(SegmentationNetwork):
             kernel_size=3,
             upsample_kernel_size=2,
             norm_name=norm_name,
-            out_size=8*20*20,
+            out_size=8 * 20 * 20,
             trans_block=trans_block,
         )
         self.decoder3 = UnetrUpBlock(
@@ -98,7 +113,7 @@ class D_LKA_Former(SegmentationNetwork):
             kernel_size=3,
             upsample_kernel_size=2,
             norm_name=norm_name,
-            out_size=16*40*40,
+            out_size=16 * 40 * 40,
             trans_block=trans_block,
         )
         self.decoder2 = UnetrUpBlock(
@@ -108,14 +123,20 @@ class D_LKA_Former(SegmentationNetwork):
             kernel_size=3,
             upsample_kernel_size=(1, 4, 4),
             norm_name=norm_name,
-            out_size=16*160*160,
+            out_size=16 * 160 * 160,
             conv_decoder=True,
             trans_block=trans_block,
         )
-        self.out1 = UnetOutBlock(spatial_dims=3, in_channels=feature_size, out_channels=out_channels)
+        self.out1 = UnetOutBlock(
+            spatial_dims=3, in_channels=feature_size, out_channels=out_channels
+        )
         if self.do_ds:
-            self.out2 = UnetOutBlock(spatial_dims=3, in_channels=feature_size * 2, out_channels=out_channels)
-            self.out3 = UnetOutBlock(spatial_dims=3, in_channels=feature_size * 4, out_channels=out_channels)
+            self.out2 = UnetOutBlock(
+                spatial_dims=3, in_channels=feature_size * 2, out_channels=out_channels
+            )
+            self.out3 = UnetOutBlock(
+                spatial_dims=3, in_channels=feature_size * 4, out_channels=out_channels
+            )
 
     def proj_feat(self, x, hidden_size, feat_size):
         x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)

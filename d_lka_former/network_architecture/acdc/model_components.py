@@ -4,47 +4,91 @@ from typing import Sequence, Tuple, Union
 from monai.networks.layers.utils import get_norm_layer
 from monai.utils import optional_import
 from d_lka_former.network_architecture.layers import LayerNorm
-from d_lka_former.network_architecture.acdc.transformerblock import TransformerBlock, TransformerBlock_3D_single_deform_LKA
+from d_lka_former.network_architecture.acdc.transformerblock import (
+    TransformerBlock,
+    TransformerBlock_3D_single_deform_LKA,
+)
 from d_lka_former.network_architecture.dynunet_block import get_conv_layer, UnetResBlock
 
 
 einops, _ = optional_import("einops")
 
+
 class D_LKA_Former_Encoder(nn.Module):
-    def __init__(self, input_size=[16 * 40 * 40, 8 * 20 * 20, 4 * 10 * 10, 2 * 5 * 5],dims=[32, 64, 128, 256],
-                 proj_size =[64,64,64,32], depths=[3, 3, 3, 3],  num_heads=4, spatial_dims=3, in_channels=1,
-                 dropout=0.0, transformer_dropout_rate=0.1, trans_block=TransformerBlock, **kwargs):
+    def __init__(
+        self,
+        input_size=[16 * 40 * 40, 8 * 20 * 20, 4 * 10 * 10, 2 * 5 * 5],
+        dims=[32, 64, 128, 256],
+        proj_size=[64, 64, 64, 32],
+        depths=[3, 3, 3, 3],
+        num_heads=4,
+        spatial_dims=3,
+        in_channels=1,
+        dropout=0.0,
+        transformer_dropout_rate=0.1,
+        trans_block=TransformerBlock,
+        **kwargs
+    ):
         super().__init__()
 
-        self.downsample_layers = nn.ModuleList()  # stem and 3 intermediate downsampling conv layers
+        self.downsample_layers = (
+            nn.ModuleList()
+        )  # stem and 3 intermediate downsampling conv layers
         stem_layer = nn.Sequential(
-            get_conv_layer(spatial_dims, in_channels, dims[0], kernel_size=(1, 4, 4), stride=(1, 4, 4),
-                           dropout=dropout, conv_only=True, ),
-            get_norm_layer(name=("group", {"num_groups": in_channels}), channels=dims[0]),
+            get_conv_layer(
+                spatial_dims,
+                in_channels,
+                dims[0],
+                kernel_size=(1, 4, 4),
+                stride=(1, 4, 4),
+                dropout=dropout,
+                conv_only=True,
+            ),
+            get_norm_layer(
+                name=("group", {"num_groups": in_channels}), channels=dims[0]
+            ),
         )
         self.downsample_layers.append(stem_layer)
         for i in range(3):
             downsample_layer = nn.Sequential(
-                get_conv_layer(spatial_dims, dims[i], dims[i + 1], kernel_size=(2, 2, 2), stride=(2, 2, 2),
-                               dropout=dropout, conv_only=True, ),
-                get_norm_layer(name=("group", {"num_groups": dims[i]}), channels=dims[i + 1]),
+                get_conv_layer(
+                    spatial_dims,
+                    dims[i],
+                    dims[i + 1],
+                    kernel_size=(2, 2, 2),
+                    stride=(2, 2, 2),
+                    dropout=dropout,
+                    conv_only=True,
+                ),
+                get_norm_layer(
+                    name=("group", {"num_groups": dims[i]}), channels=dims[i + 1]
+                ),
             )
             self.downsample_layers.append(downsample_layer)
 
-        self.stages = nn.ModuleList()  # 4 feature resolution stages, each consisting of multiple Transformer blocks
+        self.stages = (
+            nn.ModuleList()
+        )  # 4 feature resolution stages, each consisting of multiple Transformer blocks
         for i in range(4):
             stage_blocks = []
             for j in range(depths[i]):
-                stage_blocks.append(trans_block(input_size=input_size[i], hidden_size=dims[i],
-                                                     proj_size=proj_size[i], num_heads=num_heads,
-                                                     dropout_rate=transformer_dropout_rate, pos_embed=True))
+                stage_blocks.append(
+                    trans_block(
+                        input_size=input_size[i],
+                        hidden_size=dims[i],
+                        proj_size=proj_size[i],
+                        num_heads=num_heads,
+                        dropout_rate=transformer_dropout_rate,
+                        pos_embed=True,
+                    )
+                )
             self.stages.append(nn.Sequential(*stage_blocks))
         self.hidden_states = []
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv2d, nn.Linear)):
-            trunc_normal_(m.weight, std=.02)
+            trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, (LayerNorm, nn.LayerNorm)):
@@ -73,20 +117,20 @@ class D_LKA_Former_Encoder(nn.Module):
 
 
 class UnetrUpBlock(nn.Module):
-    def     __init__(
-            self,
-            spatial_dims: int,
-            in_channels: int,
-            out_channels: int,
-            kernel_size: Union[Sequence[int], int],
-            upsample_kernel_size: Union[Sequence[int], int],
-            norm_name: Union[Tuple, str],
-            proj_size: int = 64,
-            num_heads: int = 4,
-            out_size: int = 0,
-            depth: int = 3,
-            conv_decoder: bool = False,
-            trans_block=TransformerBlock,
+    def __init__(
+        self,
+        spatial_dims: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[Sequence[int], int],
+        upsample_kernel_size: Union[Sequence[int], int],
+        norm_name: Union[Tuple, str],
+        proj_size: int = 64,
+        num_heads: int = 4,
+        out_size: int = 0,
+        depth: int = 3,
+        conv_decoder: bool = False,
+        trans_block=TransformerBlock,
     ) -> None:
         """
         Args:
@@ -121,19 +165,33 @@ class UnetrUpBlock(nn.Module):
         # (see suppl. material in the paper)
         if conv_decoder == True:
             self.decoder_block.append(
-                UnetResBlock(spatial_dims, out_channels, out_channels, kernel_size=kernel_size, stride=1,
-                             norm_name=norm_name, ))
+                UnetResBlock(
+                    spatial_dims,
+                    out_channels,
+                    out_channels,
+                    kernel_size=kernel_size,
+                    stride=1,
+                    norm_name=norm_name,
+                )
+            )
         else:
             stage_blocks = []
             for j in range(depth):
-                stage_blocks.append(trans_block(input_size=out_size, hidden_size= out_channels,
-                                                     proj_size=proj_size, num_heads=num_heads,
-                                                     dropout_rate=0.1, pos_embed=True))
+                stage_blocks.append(
+                    trans_block(
+                        input_size=out_size,
+                        hidden_size=out_channels,
+                        proj_size=proj_size,
+                        num_heads=num_heads,
+                        dropout_rate=0.1,
+                        pos_embed=True,
+                    )
+                )
             self.decoder_block.append(nn.Sequential(*stage_blocks))
 
     def _init_weights(self, m):
         if isinstance(m, (nn.Conv2d, nn.Linear)):
-            trunc_normal_(m.weight, std=.02)
+            trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
         elif isinstance(m, (nn.LayerNorm)):
@@ -141,7 +199,6 @@ class UnetrUpBlock(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
     def forward(self, inp, skip):
-
         out = self.transp_conv(inp)
         out = out + skip
         out = self.decoder_block[0](out)

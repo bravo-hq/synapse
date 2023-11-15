@@ -17,15 +17,13 @@ from medpy import metric
 
 
 def assert_shape(test, reference):
-
     assert test.shape == reference.shape, "Shape mismatch: {} and {}".format(
-        test.shape, reference.shape)
+        test.shape, reference.shape
+    )
 
 
 class ConfusionMatrix:
-
     def __init__(self, test=None, reference=None):
-
         self.tp = None
         self.fp = None
         self.tn = None
@@ -39,17 +37,14 @@ class ConfusionMatrix:
         self.set_test(test)
 
     def set_test(self, test):
-
         self.test = test
         self.reset()
 
     def set_reference(self, reference):
-
         self.reference = reference
         self.reset()
 
     def reset(self):
-
         self.tp = None
         self.fp = None
         self.tn = None
@@ -61,9 +56,10 @@ class ConfusionMatrix:
         self.reference_full = None
 
     def compute(self):
-
         if self.test is None or self.reference is None:
-            raise ValueError("'test' and 'reference' must both be set to compute confusion matrix.")
+            raise ValueError(
+                "'test' and 'reference' must both be set to compute confusion matrix."
+            )
 
         assert_shape(self.test, self.reference)
 
@@ -78,7 +74,6 @@ class ConfusionMatrix:
         self.reference_full = np.all(self.reference)
 
     def get_matrix(self):
-
         for entry in (self.tp, self.fp, self.tn, self.fn):
             if entry is None:
                 self.compute()
@@ -87,113 +82,158 @@ class ConfusionMatrix:
         return self.tp, self.fp, self.tn, self.fn
 
     def get_size(self):
-
         if self.size is None:
             self.compute()
         return self.size
 
     def get_existence(self):
-
-        for case in (self.test_empty, self.test_full, self.reference_empty, self.reference_full):
+        for case in (
+            self.test_empty,
+            self.test_full,
+            self.reference_empty,
+            self.reference_full,
+        ):
             if case is None:
                 self.compute()
                 break
 
-        return self.test_empty, self.test_full, self.reference_empty, self.reference_full
+        return (
+            self.test_empty,
+            self.test_full,
+            self.reference_empty,
+            self.reference_full,
+        )
 
 
-def dice(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def dice(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """2TP / (2TP + FP + FN)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty and reference_empty:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
-    return float(2. * tp / (2 * tp + fp + fn))
+    return float(2.0 * tp / (2 * tp + fp + fn))
 
 
-def jaccard(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def jaccard(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TP / (TP + FP + FN)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty and reference_empty:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
     return float(tp / (tp + fp + fn))
 
 
-def precision(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def precision(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TP / (TP + FP)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
     return float(tp / (tp + fp))
 
 
-def sensitivity(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def sensitivity(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TP / (TP + FN)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if reference_empty:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
     return float(tp / (tp + fn))
 
 
-def recall(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def recall(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TP / (TP + FN)"""
 
     return sensitivity(test, reference, confusion_matrix, nan_for_nonexisting, **kwargs)
 
 
-def specificity(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def specificity(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TN / (TN + FP)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if reference_full:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
     return float(tn / (tn + fp))
 
@@ -209,62 +249,92 @@ def accuracy(test=None, reference=None, confusion_matrix=None, **kwargs):
     return float((tp + tn) / (tp + fp + tn + fn))
 
 
-def fscore(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, beta=1., **kwargs):
+def fscore(
+    test=None,
+    reference=None,
+    confusion_matrix=None,
+    nan_for_nonexisting=True,
+    beta=1.0,
+    **kwargs
+):
     """(1 + b^2) * TP / ((1 + b^2) * TP + b^2 * FN + FP)"""
 
     precision_ = precision(test, reference, confusion_matrix, nan_for_nonexisting)
     recall_ = recall(test, reference, confusion_matrix, nan_for_nonexisting)
 
-    return (1 + beta*beta) * precision_ * recall_ /\
-        ((beta*beta * precision_) + recall_)
+    return (
+        (1 + beta * beta)
+        * precision_
+        * recall_
+        / ((beta * beta * precision_) + recall_)
+    )
 
 
-def false_positive_rate(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def false_positive_rate(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """FP / (FP + TN)"""
 
     return 1 - specificity(test, reference, confusion_matrix, nan_for_nonexisting)
 
 
-def false_omission_rate(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def false_omission_rate(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """FN / (TN + FN)"""
 
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
     tp, fp, tn, fn = confusion_matrix.get_matrix()
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_full:
         if nan_for_nonexisting:
             return float("NaN")
         else:
-            return 0.
+            return 0.0
 
     return float(fn / (fn + tn))
 
 
-def false_negative_rate(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def false_negative_rate(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """FN / (TP + FN)"""
 
     return 1 - sensitivity(test, reference, confusion_matrix, nan_for_nonexisting)
 
 
-def true_negative_rate(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def true_negative_rate(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TN / (TN + FP)"""
 
     return specificity(test, reference, confusion_matrix, nan_for_nonexisting)
 
 
-def false_discovery_rate(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def false_discovery_rate(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """FP / (TP + FP)"""
 
     return 1 - precision(test, reference, confusion_matrix, nan_for_nonexisting)
 
 
-def negative_predictive_value(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs):
+def negative_predictive_value(
+    test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, **kwargs
+):
     """TN / (TN + FN)"""
 
-    return 1 - false_omission_rate(test, reference, confusion_matrix, nan_for_nonexisting)
+    return 1 - false_omission_rate(
+        test, reference, confusion_matrix, nan_for_nonexisting
+    )
 
 
 def total_positives_test(test=None, reference=None, confusion_matrix=None, **kwargs):
@@ -289,7 +359,9 @@ def total_negatives_test(test=None, reference=None, confusion_matrix=None, **kwa
     return tn + fn
 
 
-def total_positives_reference(test=None, reference=None, confusion_matrix=None, **kwargs):
+def total_positives_reference(
+    test=None, reference=None, confusion_matrix=None, **kwargs
+):
     """TP + FN"""
 
     if confusion_matrix is None:
@@ -300,7 +372,9 @@ def total_positives_reference(test=None, reference=None, confusion_matrix=None, 
     return tp + fn
 
 
-def total_negatives_reference(test=None, reference=None, confusion_matrix=None, **kwargs):
+def total_negatives_reference(
+    test=None, reference=None, confusion_matrix=None, **kwargs
+):
     """TN + FP"""
 
     if confusion_matrix is None:
@@ -311,12 +385,24 @@ def total_negatives_reference(test=None, reference=None, confusion_matrix=None, 
     return tn + fp
 
 
-def hausdorff_distance(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, voxel_spacing=None, connectivity=1, **kwargs):
-
+def hausdorff_distance(
+    test=None,
+    reference=None,
+    confusion_matrix=None,
+    nan_for_nonexisting=True,
+    voxel_spacing=None,
+    connectivity=1,
+    **kwargs
+):
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty or test_full or reference_empty or reference_full:
         if nan_for_nonexisting:
@@ -329,12 +415,24 @@ def hausdorff_distance(test=None, reference=None, confusion_matrix=None, nan_for
     return metric.hd(test, reference, voxel_spacing, connectivity)
 
 
-def hausdorff_distance_95(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, voxel_spacing=None, connectivity=1, **kwargs):
-
+def hausdorff_distance_95(
+    test=None,
+    reference=None,
+    confusion_matrix=None,
+    nan_for_nonexisting=True,
+    voxel_spacing=None,
+    connectivity=1,
+    **kwargs
+):
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty or test_full or reference_empty or reference_full:
         if nan_for_nonexisting:
@@ -347,12 +445,24 @@ def hausdorff_distance_95(test=None, reference=None, confusion_matrix=None, nan_
     return metric.hd95(test, reference, voxel_spacing, connectivity)
 
 
-def avg_surface_distance(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, voxel_spacing=None, connectivity=1, **kwargs):
-
+def avg_surface_distance(
+    test=None,
+    reference=None,
+    confusion_matrix=None,
+    nan_for_nonexisting=True,
+    voxel_spacing=None,
+    connectivity=1,
+    **kwargs
+):
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty or test_full or reference_empty or reference_full:
         if nan_for_nonexisting:
@@ -365,12 +475,24 @@ def avg_surface_distance(test=None, reference=None, confusion_matrix=None, nan_f
     return metric.asd(test, reference, voxel_spacing, connectivity)
 
 
-def avg_surface_distance_symmetric(test=None, reference=None, confusion_matrix=None, nan_for_nonexisting=True, voxel_spacing=None, connectivity=1, **kwargs):
-
+def avg_surface_distance_symmetric(
+    test=None,
+    reference=None,
+    confusion_matrix=None,
+    nan_for_nonexisting=True,
+    voxel_spacing=None,
+    connectivity=1,
+    **kwargs
+):
     if confusion_matrix is None:
         confusion_matrix = ConfusionMatrix(test, reference)
 
-    test_empty, test_full, reference_empty, reference_full = confusion_matrix.get_existence()
+    (
+        test_empty,
+        test_full,
+        reference_empty,
+        reference_full,
+    ) = confusion_matrix.get_existence()
 
     if test_empty or test_full or reference_empty or reference_full:
         if nan_for_nonexisting:
@@ -402,5 +524,5 @@ ALL_METRICS = {
     "Total Positives Test": total_positives_test,
     "Total Negatives Test": total_negatives_test,
     "Total Positives Reference": total_positives_reference,
-    "total Negatives Reference": total_negatives_reference
+    "total Negatives Reference": total_negatives_reference,
 }

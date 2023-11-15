@@ -10,13 +10,13 @@ class TransformerBlock(nn.Module):
     """
 
     def __init__(
-            self,
-            input_size: int,
-            hidden_size: int,
-            proj_size: int,
-            num_heads: int,
-            dropout_rate: float = 0.0,
-            pos_embed=False,
+        self,
+        input_size: int,
+        hidden_size: int,
+        proj_size: int,
+        num_heads: int,
+        dropout_rate: float = 0.0,
+        pos_embed=False,
     ) -> None:
         """
         Args:
@@ -41,11 +41,23 @@ class TransformerBlock(nn.Module):
 
         self.norm = nn.LayerNorm(hidden_size)
         self.gamma = nn.Parameter(1e-6 * torch.ones(hidden_size), requires_grad=True)
-        self.epa_block = EPA(input_size=input_size, hidden_size=hidden_size, proj_size=proj_size, num_heads=num_heads,
-                             channel_attn_drop=dropout_rate,spatial_attn_drop=dropout_rate)
-        self.conv51 = UnetResBlock(3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch")
-        self.conv52 = UnetResBlock(3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch")
-        self.conv8 = nn.Sequential(nn.Dropout3d(0.1, False), nn.Conv3d(hidden_size, hidden_size, 1))
+        self.epa_block = EPA(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            proj_size=proj_size,
+            num_heads=num_heads,
+            channel_attn_drop=dropout_rate,
+            spatial_attn_drop=dropout_rate,
+        )
+        self.conv51 = UnetResBlock(
+            3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch"
+        )
+        self.conv52 = UnetResBlock(
+            3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch"
+        )
+        self.conv8 = nn.Sequential(
+            nn.Dropout3d(0.1, False), nn.Conv3d(hidden_size, hidden_size, 1)
+        )
 
         self.pos_embed = None
         if pos_embed:
@@ -60,18 +72,31 @@ class TransformerBlock(nn.Module):
             x = x + self.pos_embed
         attn = x + self.gamma * self.epa_block(self.norm(x))
 
-        attn_skip = attn.reshape(B, H, W, D, C).permute(0, 4, 1, 2, 3)  # (B, C, H, W, D)
+        attn_skip = attn.reshape(B, H, W, D, C).permute(
+            0, 4, 1, 2, 3
+        )  # (B, C, H, W, D)
         attn = self.conv51(attn_skip)
         attn = self.conv52(attn)
         x = attn_skip + self.conv8(attn)
         return x
 
+
 class EPA(nn.Module):
     """
-        Efficient Paired Attention Block, based on: "Shaker et al.,
-        UNETR++: Delving into Efficient and Accurate 3D Medical Image Segmentation"
-        """
-    def __init__(self, input_size, hidden_size, proj_size, num_heads=4, qkv_bias=False, channel_attn_drop=0.1, spatial_attn_drop=0.1):
+    Efficient Paired Attention Block, based on: "Shaker et al.,
+    UNETR++: Delving into Efficient and Accurate 3D Medical Image Segmentation"
+    """
+
+    def __init__(
+        self,
+        input_size,
+        hidden_size,
+        proj_size,
+        num_heads=4,
+        qkv_bias=False,
+        channel_attn_drop=0.1,
+        spatial_attn_drop=0.1,
+    ):
         super().__init__()
         self.num_heads = num_heads
         self.temperature = nn.Parameter(torch.ones(num_heads, 1, 1))
@@ -118,12 +143,18 @@ class EPA(nn.Module):
 
         x_CA = (attn_CA @ v_CA).permute(0, 3, 1, 2).reshape(B, N, C)
 
-        attn_SA = (q_shared.permute(0, 1, 3, 2) @ k_shared_projected) * self.temperature2
+        attn_SA = (
+            q_shared.permute(0, 1, 3, 2) @ k_shared_projected
+        ) * self.temperature2
 
         attn_SA = attn_SA.softmax(dim=-1)
         attn_SA = self.attn_drop_2(attn_SA)
 
-        x_SA = (attn_SA @ v_SA_projected.transpose(-2, -1)).permute(0, 3, 1, 2).reshape(B, N, C)
+        x_SA = (
+            (attn_SA @ v_SA_projected.transpose(-2, -1))
+            .permute(0, 3, 1, 2)
+            .reshape(B, N, C)
+        )
 
         # Concat fusion
         x_SA = self.out_proj(x_SA)
@@ -133,15 +164,19 @@ class EPA(nn.Module):
 
     @torch.jit.ignore
     def no_weight_decay(self):
-        return {'temperature', 'temperature2'}
+        return {"temperature", "temperature2"}
 
 
 #########################
 #
 # 3D LKA with one deform conv
-# 
+#
 #########################
-from d_lka_former.network_architecture.synapse.deform_conv import DeformConvPack, DeformConvPack_Depth
+from d_lka_former.network_architecture.synapse.deform_conv import (
+    DeformConvPack,
+    DeformConvPack_Depth,
+)
+
 
 class TransformerBlock_3D_single_deform_LKA(nn.Module):
     """
@@ -150,13 +185,13 @@ class TransformerBlock_3D_single_deform_LKA(nn.Module):
     """
 
     def __init__(
-            self,
-            input_size: int,
-            hidden_size: int,
-            proj_size: int,
-            num_heads: int,
-            dropout_rate: float = 0.0,
-            pos_embed=False,
+        self,
+        input_size: int,
+        hidden_size: int,
+        proj_size: int,
+        num_heads: int,
+        dropout_rate: float = 0.0,
+        pos_embed=False,
     ) -> None:
         """
         Args:
@@ -183,8 +218,12 @@ class TransformerBlock_3D_single_deform_LKA(nn.Module):
         self.norm = nn.LayerNorm(hidden_size)
         self.gamma = nn.Parameter(1e-6 * torch.ones(hidden_size), requires_grad=True)
         self.epa_block = LKA_Attention3d_deform(d_model=hidden_size)
-        self.conv51 = UnetResBlock(3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch")
-        self.conv8 = nn.Sequential(nn.Dropout3d(0.1, False), nn.Conv3d(hidden_size, hidden_size, 1))
+        self.conv51 = UnetResBlock(
+            3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch"
+        )
+        self.conv8 = nn.Sequential(
+            nn.Dropout3d(0.1, False), nn.Conv3d(hidden_size, hidden_size, 1)
+        )
 
         self.pos_embed = None
         if pos_embed:
@@ -197,31 +236,32 @@ class TransformerBlock_3D_single_deform_LKA(nn.Module):
 
         if self.pos_embed is not None:
             x = x + self.pos_embed
-        attn = x + self.gamma * self.epa_block(self.norm(x), B, C, H , W , D)
+        attn = x + self.gamma * self.epa_block(self.norm(x), B, C, H, W, D)
 
-        attn_skip = attn.reshape(B, H, W, D, C).permute(0, 4, 1, 2, 3)  # (B, C, H, W, D)
+        attn_skip = attn.reshape(B, H, W, D, C).permute(
+            0, 4, 1, 2, 3
+        )  # (B, C, H, W, D)
         attn = self.conv51(attn_skip)
         x = attn_skip + self.conv8(attn)
 
         return x
 
 
-
 class LKA3d_deform(nn.Module):
     def __init__(self, dim):
         super().__init__()
-        #print("Dimension: {}.".format(dim))
+        # print("Dimension: {}.".format(dim))
         if dim == 32 or dim == 64:
-            #print("Using kernel sizes")
-            kernel_dwd = (5,7,7)
-            dilation_dwd = (3,3,3)
-            padding_dwd = (6,9,9)
+            # print("Using kernel sizes")
+            kernel_dwd = (5, 7, 7)
+            dilation_dwd = (3, 3, 3)
+            padding_dwd = (6, 9, 9)
             kernel_dw = 5
             padding_dw = 2
         elif dim == 128:
-            kernel_dwd = (3,5,5)
-            dilation_dwd = (1,3,3)
-            padding_dwd = (1,6,6)
+            kernel_dwd = (3, 5, 5)
+            dilation_dwd = (1, 3, 3)
+            padding_dwd = (1, 6, 6)
             kernel_dw = 5
             padding_dw = 2
         elif dim == 256:
@@ -233,16 +273,31 @@ class LKA3d_deform(nn.Module):
         else:
             raise ValueError("Unknown dim: {}".format(dim))
 
-        self.conv0 = nn.Conv3d(dim, dim, kernel_size=kernel_dw, padding=padding_dw, groups=dim)
-        self.conv_spatial = nn.Conv3d(dim, dim, kernel_size=kernel_dwd, stride=1, padding=padding_dwd, groups=dim, dilation=dilation_dwd)
+        self.conv0 = nn.Conv3d(
+            dim, dim, kernel_size=kernel_dw, padding=padding_dw, groups=dim
+        )
+        self.conv_spatial = nn.Conv3d(
+            dim,
+            dim,
+            kernel_size=kernel_dwd,
+            stride=1,
+            padding=padding_dwd,
+            groups=dim,
+            dilation=dilation_dwd,
+        )
         self.conv1 = nn.Conv3d(dim, dim, 1)
-        
-        self.deform_conv = DeformConvPack(in_channels=dim, out_channels=dim, kernel_size=(3,3,3), stride=1, padding=1)
-        
+
+        self.deform_conv = DeformConvPack(
+            in_channels=dim,
+            out_channels=dim,
+            kernel_size=(3, 3, 3),
+            stride=1,
+            padding=1,
+        )
 
     def forward(self, x):
-        #print("x shape: {}".format(x.size()))
-        u = x.clone()        
+        # print("x shape: {}".format(x.size()))
+        u = x.clone()
         attn = self.conv0(x)
         attn = self.conv_spatial(attn)
         attn = attn.contiguous()
@@ -262,7 +317,7 @@ class LKA_Attention3d_deform(nn.Module):
         self.proj_2 = nn.Conv3d(d_model, d_model, 1)
 
     def forward(self, x, B, C, H, W, D):
-        x = x.permute(0,2,1).reshape(B, C, H, W, D) # B N C --> B C N --> B C H W D 
+        x = x.permute(0, 2, 1).reshape(B, C, H, W, D)  # B N C --> B C N --> B C H W D
         shortcut = x.clone()
         x = self.proj_1(x)
         x = self.activation(x)

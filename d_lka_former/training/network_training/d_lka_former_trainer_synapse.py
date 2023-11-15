@@ -18,14 +18,19 @@ from typing import Tuple
 
 import numpy as np
 import torch
-from d_lka_former.training.data_augmentation.data_augmentation_moreDA import get_moreDA_augmentation
+from d_lka_former.training.data_augmentation.data_augmentation_moreDA import (
+    get_moreDA_augmentation,
+)
 from d_lka_former.training.loss_functions.deep_supervision import MultipleOutputLoss2
 from d_lka_former.utilities.to_torch import maybe_to_torch, to_cuda
 from d_lka_former.network_architecture.synapse.d_lka_former_synapse import D_LKA_Former
 from d_lka_former.network_architecture.initialization import InitWeights_He
 from d_lka_former.network_architecture.neural_network import SegmentationNetwork
-from d_lka_former.training.data_augmentation.default_data_augmentation import default_2D_augmentation_params, \
-    get_patch_size, default_3D_augmentation_params
+from d_lka_former.training.data_augmentation.default_data_augmentation import (
+    default_2D_augmentation_params,
+    get_patch_size,
+    default_3D_augmentation_params,
+)
 from d_lka_former.training.dataloading.dataset_loading import unpack_dataset
 from d_lka_former.training.network_training.Trainer_synapse import Trainer_synapse
 from d_lka_former.utilities.nd_softmax import softmax_helper
@@ -42,10 +47,34 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
     same as internal nnFromerTrinerV2 and nnUNetTrainerV2_2
     """
 
-    def __init__(self, plans_file, fold, output_folder=None, dataset_directory=None, batch_dice=True, stage=None,
-                 unpack_data=True, deterministic=True, fp16=False, trans_block=None, depths=[3,3,3,3], skip_connections=[True, True, True, True], seed=12345):
-        super().__init__(plans_file, fold, output_folder, dataset_directory, batch_dice, stage, unpack_data,
-                         deterministic, fp16, seed=seed)
+    def __init__(
+        self,
+        plans_file,
+        fold,
+        output_folder=None,
+        dataset_directory=None,
+        batch_dice=True,
+        stage=None,
+        unpack_data=True,
+        deterministic=True,
+        fp16=False,
+        trans_block=None,
+        depths=[3, 3, 3, 3],
+        skip_connections=[True, True, True, True],
+        seed=12345,
+    ):
+        super().__init__(
+            plans_file,
+            fold,
+            output_folder,
+            dataset_directory,
+            batch_dice,
+            stage,
+            unpack_data,
+            deterministic,
+            fp16,
+            seed=seed,
+        )
         self.max_num_epochs = 1000
         self.initial_lr = 1e-2
         self.deep_supervision_scales = None
@@ -56,12 +85,12 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.load_plans_file()
 
         self.crop_size = [64, 128, 128]
-        self.input_channels = self.plans['num_modalities']
-        self.num_classes = self.plans['num_classes'] + 1
+        self.input_channels = self.plans["num_modalities"]
+        self.num_classes = self.plans["num_classes"] + 1
         self.conv_op = nn.Conv3d
 
         self.embedding_dim = 192
-        self.depths = depths #[2, 2, 2, 2]
+        self.depths = depths  # [2, 2, 2, 2]
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
@@ -85,7 +114,11 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             if force_load_plans or (self.plans is None):
                 self.load_plans_file()
 
-            self.plans['plans_per_stage'][self.stage]['pool_op_kernel_sizes'] = [[2, 4, 4], [2, 2, 2], [2, 2, 2]]
+            self.plans["plans_per_stage"][self.stage]["pool_op_kernel_sizes"] = [
+                [2, 4, 4],
+                [2, 2, 2],
+                [2, 2, 2],
+            ]
             self.process_plans(self.plans)
 
             self.setup_DA_params()
@@ -96,7 +129,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
 
                 # we give each output a weight which decreases exponentially (division by 2) as the resolution decreases
                 # this gives higher resolution outputs more weight in the loss
-                weights = np.array([1 / (2 ** i) for i in range(net_numpool)])
+                weights = np.array([1 / (2**i) for i in range(net_numpool)])
 
                 # we don't use the lowest 2 outputs. Normalize weights so that they sum to 1
                 # mask = np.array([True] + [True if i < net_numpool - 1 else False for i in range(1, net_numpool)])
@@ -110,14 +143,28 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
 
             ## LEON HERE, adjusting data augmentation threads
             print("Adjusting data augmentation threads")
-            print("Current num threads: {}".format(self.data_aug_params.get('num_threads')))
-            self.data_aug_params['num_threads'] = 4
-            print("Updated num threads: {}".format(self.data_aug_params.get('num_threads')))
+            print(
+                "Current num threads: {}".format(
+                    self.data_aug_params.get("num_threads")
+                )
+            )
+            self.data_aug_params["num_threads"] = 4
+            print(
+                "Updated num threads: {}".format(
+                    self.data_aug_params.get("num_threads")
+                )
+            )
 
-            self.folder_with_preprocessed_data = join(self.dataset_directory,
-                                                      self.plans['data_identifier'] + "_stage%d" % self.stage)
-            seeds_train = np.random.random_integers(0, 99999, self.data_aug_params.get('num_threads'))
-            seeds_val = np.random.random_integers(0, 99999, max(self.data_aug_params.get('num_threads') // 2, 1))
+            self.folder_with_preprocessed_data = join(
+                self.dataset_directory,
+                self.plans["data_identifier"] + "_stage%d" % self.stage,
+            )
+            seeds_train = np.random.random_integers(
+                0, 99999, self.data_aug_params.get("num_threads")
+            )
+            seeds_val = np.random.random_integers(
+                0, 99999, max(self.data_aug_params.get("num_threads") // 2, 1)
+            )
             if training:
                 self.dl_tr, self.dl_val = self.get_basic_generators()
                 if self.unpack_data:
@@ -127,23 +174,30 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                 else:
                     print(
                         "INFO: Not unpacking data! Training may be slow due to that. Pray you are not using 2d or you "
-                        "will wait all winter for your model to finish!")
+                        "will wait all winter for your model to finish!"
+                    )
 
                 self.tr_gen, self.val_gen = get_moreDA_augmentation(
-                    self.dl_tr, self.dl_val,
-                    self.data_aug_params[
-                        'patch_size_for_spatialtransform'],
+                    self.dl_tr,
+                    self.dl_val,
+                    self.data_aug_params["patch_size_for_spatialtransform"],
                     self.data_aug_params,
-                    deep_supervision_scales=self.deep_supervision_scales if self.deep_supervision else None,
+                    deep_supervision_scales=self.deep_supervision_scales
+                    if self.deep_supervision
+                    else None,
                     pin_memory=self.pin_memory,
                     use_nondetMultiThreadedAugmenter=False,
                     seeds_train=seeds_train,
-                    seeds_val=seeds_val
+                    seeds_val=seeds_val,
                 )
-                self.print_to_log_file("TRAINING KEYS:\n %s" % (str(self.dataset_tr.keys())),
-                                       also_print_to_console=False)
-                self.print_to_log_file("VALIDATION KEYS:\n %s" % (str(self.dataset_val.keys())),
-                                       also_print_to_console=False)
+                self.print_to_log_file(
+                    "TRAINING KEYS:\n %s" % (str(self.dataset_tr.keys())),
+                    also_print_to_console=False,
+                )
+                self.print_to_log_file(
+                    "VALIDATION KEYS:\n %s" % (str(self.dataset_val.keys())),
+                    also_print_to_console=False,
+                )
             else:
                 pass
 
@@ -152,7 +206,9 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
 
             assert isinstance(self.network, (SegmentationNetwork, nn.DataParallel))
         else:
-            self.print_to_log_file('self.was_initialized is True, not running self.initialize again')
+            self.print_to_log_file(
+                "self.was_initialized is True, not running self.initialize again"
+            )
         self.was_initialized = True
 
     def initialize_network(self):
@@ -167,26 +223,32 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         :return:
         """
 
-        self.network = D_LKA_Former(in_channels=self.input_channels,
-                             out_channels=self.num_classes,
-                             img_size=self.crop_size,
-                             feature_size=16,
-                             num_heads=4,
-                             depths=self.depths, #[3, 3, 3, 3],
-                             dims=[32, 64, 128, 256],
-                             do_ds=True,
-                             trans_block=self.trans_block,
-                             skip_connections=self.skip_connections,
-                             )
+        self.network = D_LKA_Former(
+            in_channels=self.input_channels,
+            out_channels=self.num_classes,
+            img_size=self.crop_size,
+            feature_size=16,
+            num_heads=4,
+            depths=self.depths,  # [3, 3, 3, 3],
+            dims=[32, 64, 128, 256],
+            do_ds=True,
+            trans_block=self.trans_block,
+            skip_connections=self.skip_connections,
+        )
 
         if torch.cuda.is_available():
             self.network.cuda()
         self.network.inference_apply_nonlin = softmax_helper
         # Print the network parameters & Flops
-        n_parameters = sum(p.numel() for p in self.network.parameters() if p.requires_grad)
+        n_parameters = sum(
+            p.numel() for p in self.network.parameters() if p.requires_grad
+        )
         input_res = (1, 64, 128, 128)
-        input = torch.ones(()).new_empty((1, *input_res), dtype=next(self.network.parameters()).dtype,
-                                         device=next(self.network.parameters()).device)
+        input = torch.ones(()).new_empty(
+            (1, *input_res),
+            dtype=next(self.network.parameters()).dtype,
+            device=next(self.network.parameters()).device,
+        )
         flops = FlopCountAnalysis(self.network, input)
         model_flops = flops.total()
         print(f"Total trainable parameters: {round(n_parameters * 1e-6, 4)} M")
@@ -194,8 +256,13 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
 
     def initialize_optimizer_and_scheduler(self):
         assert self.network is not None, "self.initialize_network must be called first"
-        self.optimizer = torch.optim.SGD(self.network.parameters(), self.initial_lr, weight_decay=self.weight_decay,
-                                         momentum=0.99, nesterov=True)
+        self.optimizer = torch.optim.SGD(
+            self.network.parameters(),
+            self.initial_lr,
+            weight_decay=self.weight_decay,
+            momentum=0.99,
+            nesterov=True,
+        )
         self.lr_scheduler = None
 
     def run_online_evaluation(self, output, target):
@@ -214,49 +281,80 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             output = output
         return super().run_online_evaluation(output, target)
 
-    def validate(self, do_mirroring: bool = True, use_sliding_window: bool = True,
-                 step_size: float = 0.5, save_softmax: bool = True, use_gaussian: bool = True, overwrite: bool = True,
-                 validation_folder_name: str = 'validation_raw', debug: bool = False, all_in_gpu: bool = False,
-                 segmentation_export_kwargs: dict = None, run_postprocessing_on_folds: bool = True):
+    def validate(
+        self,
+        do_mirroring: bool = True,
+        use_sliding_window: bool = True,
+        step_size: float = 0.5,
+        save_softmax: bool = True,
+        use_gaussian: bool = True,
+        overwrite: bool = True,
+        validation_folder_name: str = "validation_raw",
+        debug: bool = False,
+        all_in_gpu: bool = False,
+        segmentation_export_kwargs: dict = None,
+        run_postprocessing_on_folds: bool = True,
+    ):
         """
         We need to wrap this because we need to enforce self.network.do_ds = False for prediction
         """
         ds = self.network.do_ds
         self.network.do_ds = False
-        ret = super().validate(do_mirroring=do_mirroring, use_sliding_window=use_sliding_window, step_size=step_size,
-                               save_softmax=save_softmax, use_gaussian=use_gaussian,
-                               overwrite=overwrite, validation_folder_name=validation_folder_name, debug=debug,
-                               all_in_gpu=all_in_gpu, segmentation_export_kwargs=segmentation_export_kwargs,
-                               run_postprocessing_on_folds=run_postprocessing_on_folds)
+        ret = super().validate(
+            do_mirroring=do_mirroring,
+            use_sliding_window=use_sliding_window,
+            step_size=step_size,
+            save_softmax=save_softmax,
+            use_gaussian=use_gaussian,
+            overwrite=overwrite,
+            validation_folder_name=validation_folder_name,
+            debug=debug,
+            all_in_gpu=all_in_gpu,
+            segmentation_export_kwargs=segmentation_export_kwargs,
+            run_postprocessing_on_folds=run_postprocessing_on_folds,
+        )
 
         self.network.do_ds = ds
         return ret
 
-    def predict_preprocessed_data_return_seg_and_softmax(self, data: np.ndarray, do_mirroring: bool = True,
-                                                         mirror_axes: Tuple[int] = None,
-                                                         use_sliding_window: bool = True, step_size: float = 0.5,
-                                                         use_gaussian: bool = True, pad_border_mode: str = 'constant',
-                                                         pad_kwargs: dict = None, all_in_gpu: bool = False,
-                                                         verbose: bool = True, mixed_precision=True) -> Tuple[
-        np.ndarray, np.ndarray]:
+    def predict_preprocessed_data_return_seg_and_softmax(
+        self,
+        data: np.ndarray,
+        do_mirroring: bool = True,
+        mirror_axes: Tuple[int] = None,
+        use_sliding_window: bool = True,
+        step_size: float = 0.5,
+        use_gaussian: bool = True,
+        pad_border_mode: str = "constant",
+        pad_kwargs: dict = None,
+        all_in_gpu: bool = False,
+        verbose: bool = True,
+        mixed_precision=True,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         We need to wrap this because we need to enforce self.network.do_ds = False for prediction
         """
         ds = self.network.do_ds
         self.network.do_ds = False
-        ret = super().predict_preprocessed_data_return_seg_and_softmax(data,
-                                                                       do_mirroring=do_mirroring,
-                                                                       mirror_axes=mirror_axes,
-                                                                       use_sliding_window=use_sliding_window,
-                                                                       step_size=step_size, use_gaussian=use_gaussian,
-                                                                       pad_border_mode=pad_border_mode,
-                                                                       pad_kwargs=pad_kwargs, all_in_gpu=all_in_gpu,
-                                                                       verbose=verbose,
-                                                                       mixed_precision=mixed_precision)
+        ret = super().predict_preprocessed_data_return_seg_and_softmax(
+            data,
+            do_mirroring=do_mirroring,
+            mirror_axes=mirror_axes,
+            use_sliding_window=use_sliding_window,
+            step_size=step_size,
+            use_gaussian=use_gaussian,
+            pad_border_mode=pad_border_mode,
+            pad_kwargs=pad_kwargs,
+            all_in_gpu=all_in_gpu,
+            verbose=verbose,
+            mixed_precision=mixed_precision,
+        )
         self.network.do_ds = ds
         return ret
 
-    def run_iteration(self, data_generator, do_backprop=True, run_online_evaluation=False):
+    def run_iteration(
+        self, data_generator, do_backprop=True, run_online_evaluation=False
+    ):
         """
         gradient clipping improves training stability
 
@@ -266,8 +364,8 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         :return:
         """
         data_dict = next(data_generator)
-        data = data_dict['data']
-        target = data_dict['target']
+        data = data_dict["data"]
+        target = data_dict["target"]
 
         data = maybe_to_torch(data)
         target = maybe_to_torch(target)
@@ -335,32 +433,71 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                     train_keys = np.array(all_keys_sorted)[train_idx]
                     test_keys = np.array(all_keys_sorted)[test_idx]
                     splits.append(OrderedDict())
-                    splits[-1]['train'] = train_keys
-                    splits[-1]['val'] = test_keys
+                    splits[-1]["train"] = train_keys
+                    splits[-1]["val"] = test_keys
                 save_pickle(splits, splits_file)
 
             else:
-                self.print_to_log_file("Using splits from existing split file:", splits_file)
+                self.print_to_log_file(
+                    "Using splits from existing split file:", splits_file
+                )
                 splits = load_pickle(splits_file)
-                self.print_to_log_file("The split file contains %d splits." % len(splits))
+                self.print_to_log_file(
+                    "The split file contains %d splits." % len(splits)
+                )
 
             self.print_to_log_file("Desired fold for training: %d" % self.fold)
-            splits[self.fold]['train'] = np.array(
-                ['img0006', 'img0007', 'img0009', 'img0010', 'img0021', 'img0023', 'img0024', 'img0026', 'img0027',
-                 'img0031', 'img0033', 'img0034' \
-                    , 'img0039', 'img0040', 'img0005', 'img0028', 'img0030', 'img0037'])
-            splits[self.fold]['val'] = np.array(
-                ['img0001', 'img0002', 'img0003', 'img0004', 'img0008', 'img0022', 'img0025', 'img0029', 'img0032',
-                 'img0035', 'img0036', 'img0038'])
+            splits[self.fold]["train"] = np.array(
+                [
+                    "img0006",
+                    "img0007",
+                    "img0009",
+                    "img0010",
+                    "img0021",
+                    "img0023",
+                    "img0024",
+                    "img0026",
+                    "img0027",
+                    "img0031",
+                    "img0033",
+                    "img0034",
+                    "img0039",
+                    "img0040",
+                    "img0005",
+                    "img0028",
+                    "img0030",
+                    "img0037",
+                ]
+            )
+            splits[self.fold]["val"] = np.array(
+                [
+                    "img0001",
+                    "img0002",
+                    "img0003",
+                    "img0004",
+                    "img0008",
+                    "img0022",
+                    "img0025",
+                    "img0029",
+                    "img0032",
+                    "img0035",
+                    "img0036",
+                    "img0038",
+                ]
+            )
             if self.fold < len(splits):
-                tr_keys = splits[self.fold]['train']
-                val_keys = splits[self.fold]['val']
-                self.print_to_log_file("This split has %d training and %d validation cases."
-                                       % (len(tr_keys), len(val_keys)))
+                tr_keys = splits[self.fold]["train"]
+                val_keys = splits[self.fold]["val"]
+                self.print_to_log_file(
+                    "This split has %d training and %d validation cases."
+                    % (len(tr_keys), len(val_keys))
+                )
             else:
-                self.print_to_log_file("INFO: You requested fold %d for training but splits "
-                                       "contain only %d folds. I am now creating a "
-                                       "random (but seeded) 80:20 split!" % (self.fold, len(splits)))
+                self.print_to_log_file(
+                    "INFO: You requested fold %d for training but splits "
+                    "contain only %d folds. I am now creating a "
+                    "random (but seeded) 80:20 split!" % (self.fold, len(splits))
+                )
                 # if we request a fold that is not in the split file, create a random 80:20 split
                 rnd = np.random.RandomState(seed=12345 + self.fold)
                 keys = np.sort(list(self.dataset.keys()))
@@ -368,8 +505,10 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                 idx_val = [i for i in range(len(keys)) if i not in idx_tr]
                 tr_keys = [keys[i] for i in idx_tr]
                 val_keys = [keys[i] for i in idx_val]
-                self.print_to_log_file("This random 80:20 split has %d training and %d validation cases."
-                                       % (len(tr_keys), len(val_keys)))
+                self.print_to_log_file(
+                    "This random 80:20 split has %d training and %d validation cases."
+                    % (len(tr_keys), len(val_keys))
+                )
 
         tr_keys.sort()
         val_keys.sort()
@@ -389,48 +528,76 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         :return:
         """
 
-        self.deep_supervision_scales = [[1, 1, 1]] + list(list(i) for i in 1 / np.cumprod(
-            np.vstack(self.net_num_pool_op_kernel_sizes), axis=0))[:-1]
+        self.deep_supervision_scales = [[1, 1, 1]] + list(
+            list(i)
+            for i in 1
+            / np.cumprod(np.vstack(self.net_num_pool_op_kernel_sizes), axis=0)
+        )[:-1]
 
         if self.threeD:
             self.data_aug_params = default_3D_augmentation_params
-            self.data_aug_params['rotation_x'] = (-30. / 360 * 2. * np.pi, 30. / 360 * 2. * np.pi)
-            self.data_aug_params['rotation_y'] = (-30. / 360 * 2. * np.pi, 30. / 360 * 2. * np.pi)
-            self.data_aug_params['rotation_z'] = (-30. / 360 * 2. * np.pi, 30. / 360 * 2. * np.pi)
+            self.data_aug_params["rotation_x"] = (
+                -30.0 / 360 * 2.0 * np.pi,
+                30.0 / 360 * 2.0 * np.pi,
+            )
+            self.data_aug_params["rotation_y"] = (
+                -30.0 / 360 * 2.0 * np.pi,
+                30.0 / 360 * 2.0 * np.pi,
+            )
+            self.data_aug_params["rotation_z"] = (
+                -30.0 / 360 * 2.0 * np.pi,
+                30.0 / 360 * 2.0 * np.pi,
+            )
             if self.do_dummy_2D_aug:
                 self.data_aug_params["dummy_2D"] = True
                 self.print_to_log_file("Using dummy2d data augmentation")
-                self.data_aug_params["elastic_deform_alpha"] = \
-                    default_2D_augmentation_params["elastic_deform_alpha"]
-                self.data_aug_params["elastic_deform_sigma"] = \
-                    default_2D_augmentation_params["elastic_deform_sigma"]
-                self.data_aug_params["rotation_x"] = default_2D_augmentation_params["rotation_x"]
+                self.data_aug_params[
+                    "elastic_deform_alpha"
+                ] = default_2D_augmentation_params["elastic_deform_alpha"]
+                self.data_aug_params[
+                    "elastic_deform_sigma"
+                ] = default_2D_augmentation_params["elastic_deform_sigma"]
+                self.data_aug_params["rotation_x"] = default_2D_augmentation_params[
+                    "rotation_x"
+                ]
         else:
             self.do_dummy_2D_aug = False
             if max(self.patch_size) / min(self.patch_size) > 1.5:
-                default_2D_augmentation_params['rotation_x'] = (-15. / 360 * 2. * np.pi, 15. / 360 * 2. * np.pi)
+                default_2D_augmentation_params["rotation_x"] = (
+                    -15.0 / 360 * 2.0 * np.pi,
+                    15.0 / 360 * 2.0 * np.pi,
+                )
             self.data_aug_params = default_2D_augmentation_params
         self.data_aug_params["mask_was_used_for_normalization"] = self.use_mask_for_norm
 
         if self.do_dummy_2D_aug:
-            self.basic_generator_patch_size = get_patch_size(self.patch_size[1:],
-                                                             self.data_aug_params['rotation_x'],
-                                                             self.data_aug_params['rotation_y'],
-                                                             self.data_aug_params['rotation_z'],
-                                                             self.data_aug_params['scale_range'])
-            self.basic_generator_patch_size = np.array([self.patch_size[0]] + list(self.basic_generator_patch_size))
+            self.basic_generator_patch_size = get_patch_size(
+                self.patch_size[1:],
+                self.data_aug_params["rotation_x"],
+                self.data_aug_params["rotation_y"],
+                self.data_aug_params["rotation_z"],
+                self.data_aug_params["scale_range"],
+            )
+            self.basic_generator_patch_size = np.array(
+                [self.patch_size[0]] + list(self.basic_generator_patch_size)
+            )
             patch_size_for_spatialtransform = self.patch_size[1:]
         else:
-            self.basic_generator_patch_size = get_patch_size(self.patch_size, self.data_aug_params['rotation_x'],
-                                                             self.data_aug_params['rotation_y'],
-                                                             self.data_aug_params['rotation_z'],
-                                                             self.data_aug_params['scale_range'])
+            self.basic_generator_patch_size = get_patch_size(
+                self.patch_size,
+                self.data_aug_params["rotation_x"],
+                self.data_aug_params["rotation_y"],
+                self.data_aug_params["rotation_z"],
+                self.data_aug_params["scale_range"],
+            )
             patch_size_for_spatialtransform = self.patch_size
 
         self.data_aug_params["scale_range"] = (0.7, 1.4)
         self.data_aug_params["do_elastic"] = False
-        self.data_aug_params['selected_seg_channels'] = [0]
-        self.data_aug_params['patch_size_for_spatialtransform'] = patch_size_for_spatialtransform
+        self.data_aug_params["selected_seg_channels"] = [0]
+        self.data_aug_params[
+            "patch_size_for_spatialtransform"
+        ] = patch_size_for_spatialtransform
 
         self.data_aug_params["num_cached_per_thread"] = 2
 
@@ -448,8 +615,12 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             ep = self.epoch + 1
         else:
             ep = epoch
-        self.optimizer.param_groups[0]['lr'] = poly_lr(ep, self.max_num_epochs, self.initial_lr, 0.9)
-        self.print_to_log_file("lr:", np.round(self.optimizer.param_groups[0]['lr'], decimals=6))
+        self.optimizer.param_groups[0]["lr"] = poly_lr(
+            ep, self.max_num_epochs, self.initial_lr, 0.9
+        )
+        self.print_to_log_file(
+            "lr:", np.round(self.optimizer.param_groups[0]["lr"], decimals=6)
+        )
 
     def on_epoch_end(self):
         """
@@ -465,10 +636,12 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             if self.all_val_eval_metrics[-1] == 0:
                 self.optimizer.param_groups[0]["momentum"] = 0.95
                 self.network.apply(InitWeights_He(1e-2))
-                self.print_to_log_file("At epoch 100, the mean foreground Dice was 0. This can be caused by a too "
-                                       "high momentum. High momentum (0.99) is good for datasets where it works, but "
-                                       "sometimes causes issues such as this one. Momentum has now been reduced to "
-                                       "0.95 and network weights have been reinitialized")
+                self.print_to_log_file(
+                    "At epoch 100, the mean foreground Dice was 0. This can be caused by a too "
+                    "high momentum. High momentum (0.99) is good for datasets where it works, but "
+                    "sometimes causes issues such as this one. Momentum has now been reduced to "
+                    "0.95 and network weights have been reinitialized"
+                )
         return continue_training
 
     def run_training(self):
@@ -479,7 +652,9 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         we also need to make sure deep supervision in the network is enabled for training, thus the wrapper
         :return:
         """
-        self.maybe_update_lr(self.epoch)  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
+        self.maybe_update_lr(
+            self.epoch
+        )  # if we dont overwrite epoch then self.epoch+1 is used which is not what we
         # want at the start of the training
         ds = self.network.do_ds
         if self.deep_supervision:

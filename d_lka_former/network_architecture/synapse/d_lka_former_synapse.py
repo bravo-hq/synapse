@@ -2,8 +2,25 @@ from torch import nn
 from typing import Tuple, Union
 from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 from d_lka_former.network_architecture.dynunet_block import UnetOutBlock, UnetResBlock
-from d_lka_former.network_architecture.synapse.model_components import D_LKA_Former_Encoder, D_LKA_FormerUpBlock
-from d_lka_former.network_architecture.synapse.transformerblock import TransformerBlock, TransformerBlock_LKA_Channel, TransformerBlock_SE, TransformerBlock_3D_LKA, TransformerBlock_Deform_LKA_Channel, TransformerBlock_Deform_LKA_Channel_sequential, TransformerBlock_3D_LKA_3D_conv, TransformerBlock_LKA_Channel_norm, TransformerBlock_LKA_Spatial, TransformerBlock_Deform_LKA_Spatial_sequential, TransformerBlock_Deform_LKA_Spatial, TransformerBlock_3D_single_deform_LKA
+from d_lka_former.network_architecture.synapse.model_components import (
+    D_LKA_Former_Encoder,
+    D_LKA_FormerUpBlock,
+)
+from d_lka_former.network_architecture.synapse.transformerblock import (
+    TransformerBlock,
+    TransformerBlock_LKA_Channel,
+    TransformerBlock_SE,
+    TransformerBlock_3D_LKA,
+    TransformerBlock_Deform_LKA_Channel,
+    TransformerBlock_Deform_LKA_Channel_sequential,
+    TransformerBlock_3D_LKA_3D_conv,
+    TransformerBlock_LKA_Channel_norm,
+    TransformerBlock_LKA_Spatial,
+    TransformerBlock_Deform_LKA_Spatial_sequential,
+    TransformerBlock_Deform_LKA_Spatial,
+    TransformerBlock_3D_single_deform_LKA,
+)
+
 
 class D_LKA_Former(SegmentationNetwork):
     """
@@ -12,22 +29,22 @@ class D_LKA_Former(SegmentationNetwork):
     """
 
     def __init__(
-            self,
-            in_channels: int,
-            out_channels: int,
-            img_size: [64, 128, 128],
-            feature_size: int = 16,
-            hidden_size: int = 256,
-            num_heads: int = 4,
-            pos_embed: str = "perceptron",  # TODO: Remove the argument
-            norm_name: Union[Tuple, str] = "instance",
-            dropout_rate: float = 0.0,
-            depths=None,
-            dims=None,
-            conv_op=nn.Conv3d,
-            do_ds=True,
-            trans_block=TransformerBlock,
-            skip_connections=[True, True, True, True],
+        self,
+        in_channels: int,
+        out_channels: int,
+        img_size: [64, 128, 128],
+        feature_size: int = 16,
+        hidden_size: int = 256,
+        num_heads: int = 4,
+        pos_embed: str = "perceptron",  # TODO: Remove the argument
+        norm_name: Union[Tuple, str] = "instance",
+        dropout_rate: float = 0.0,
+        depths=None,
+        dims=None,
+        conv_op=nn.Conv3d,
+        do_ds=True,
+        trans_block=TransformerBlock,
+        skip_connections=[True, True, True, True],
     ) -> None:
         """
         Args:
@@ -64,19 +81,29 @@ class D_LKA_Former(SegmentationNetwork):
             raise AssertionError("dropout_rate should be between 0 and 1.")
 
         if pos_embed not in ["conv", "perceptron"]:
-            raise KeyError(f"Position embedding layer of type {pos_embed} is not supported.")
+            raise KeyError(
+                f"Position embedding layer of type {pos_embed} is not supported."
+            )
 
         self.patch_size = (2, 4, 4)
         self.feat_size = (
-            img_size[0] // self.patch_size[0] // 8,  # 8 is the downsampling happened through the four encoders stages
-            img_size[1] // self.patch_size[1] // 8,  # 8 is the downsampling happened through the four encoders stages
-            img_size[2] // self.patch_size[2] // 8,  # 8 is the downsampling happened through the four encoders stages
+            img_size[0]
+            // self.patch_size[0]
+            // 8,  # 8 is the downsampling happened through the four encoders stages
+            img_size[1]
+            // self.patch_size[1]
+            // 8,  # 8 is the downsampling happened through the four encoders stages
+            img_size[2]
+            // self.patch_size[2]
+            // 8,  # 8 is the downsampling happened through the four encoders stages
         )
         self.hidden_size = hidden_size
 
         print("Using transformerblock: {}".format(trans_block))
 
-        self.d_lka_former_encoder = D_LKA_Former_Encoder(dims=dims, depths=depths, num_heads=num_heads, trans_block=trans_block)
+        self.d_lka_former_encoder = D_LKA_Former_Encoder(
+            dims=dims, depths=depths, num_heads=num_heads, trans_block=trans_block
+        )
 
         self.encoder1 = UnetResBlock(
             spatial_dims=3,
@@ -95,7 +122,7 @@ class D_LKA_Former(SegmentationNetwork):
             norm_name=norm_name,
             out_size=8 * 8 * 8,
             trans_block=trans_block,
-            use_skip=skip_connections[0]
+            use_skip=skip_connections[0],
         )
         self.decoder4 = D_LKA_FormerUpBlock(
             spatial_dims=3,
@@ -106,7 +133,7 @@ class D_LKA_Former(SegmentationNetwork):
             norm_name=norm_name,
             out_size=16 * 16 * 16,
             trans_block=trans_block,
-            use_skip=skip_connections[1]
+            use_skip=skip_connections[1],
         )
         self.decoder3 = D_LKA_FormerUpBlock(
             spatial_dims=3,
@@ -117,7 +144,7 @@ class D_LKA_Former(SegmentationNetwork):
             norm_name=norm_name,
             out_size=32 * 32 * 32,
             trans_block=trans_block,
-            use_skip=skip_connections[2]
+            use_skip=skip_connections[2],
         )
         self.decoder2 = D_LKA_FormerUpBlock(
             spatial_dims=3,
@@ -129,12 +156,18 @@ class D_LKA_Former(SegmentationNetwork):
             out_size=64 * 128 * 128,
             conv_decoder=True,
             trans_block=trans_block,
-            use_skip=skip_connections[3]
+            use_skip=skip_connections[3],
         )
-        self.out1 = UnetOutBlock(spatial_dims=3, in_channels=feature_size, out_channels=out_channels)
+        self.out1 = UnetOutBlock(
+            spatial_dims=3, in_channels=feature_size, out_channels=out_channels
+        )
         if self.do_ds:
-            self.out2 = UnetOutBlock(spatial_dims=3, in_channels=feature_size * 2, out_channels=out_channels)
-            self.out3 = UnetOutBlock(spatial_dims=3, in_channels=feature_size * 4, out_channels=out_channels)
+            self.out2 = UnetOutBlock(
+                spatial_dims=3, in_channels=feature_size * 2, out_channels=out_channels
+            )
+            self.out3 = UnetOutBlock(
+                spatial_dims=3, in_channels=feature_size * 4, out_channels=out_channels
+            )
 
     def proj_feat(self, x, hidden_size, feat_size):
         x = x.view(x.size(0), feat_size[0], feat_size[1], feat_size[2], hidden_size)

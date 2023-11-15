@@ -15,19 +15,12 @@ def get_brats_regions():
     different labeling convention!
     :return:
     """
-    regions = {
-        "whole tumor": (1, 2, 3),
-        "tumor core": (2, 3),
-        "enhancing tumor": (3,)
-    }
+    regions = {"whole tumor": (1, 2, 3), "tumor core": (2, 3), "enhancing tumor": (3,)}
     return regions
 
 
 def get_KiTS_regions():
-    regions = {
-        "kidney incl tumor": (1, 2),
-        "tumor": (2,)
-    }
+    regions = {"kidney incl tumor": (1, 2), "tumor": (2,)}
     return regions
 
 
@@ -45,20 +38,30 @@ def evaluate_case(file_pred: str, file_gt: str, regions):
     for r in regions:
         mask_pred = create_region_from_mask(image_pred, r)
         mask_gt = create_region_from_mask(image_gt, r)
-        dc = np.nan if np.sum(mask_gt) == 0 and np.sum(mask_pred) == 0 else metric.dc(mask_pred, mask_gt)
+        dc = (
+            np.nan
+            if np.sum(mask_gt) == 0 and np.sum(mask_pred) == 0
+            else metric.dc(mask_pred, mask_gt)
+        )
         results.append(dc)
     return results
 
 
-def evaluate_regions(folder_predicted: str, folder_gt: str, regions: dict, processes=default_num_threads):
+def evaluate_regions(
+    folder_predicted: str, folder_gt: str, regions: dict, processes=default_num_threads
+):
     region_names = list(regions.keys())
-    files_in_pred = subfiles(folder_predicted, suffix='.nii.gz', join=False)
-    files_in_gt = subfiles(folder_gt, suffix='.nii.gz', join=False)
+    files_in_pred = subfiles(folder_predicted, suffix=".nii.gz", join=False)
+    files_in_gt = subfiles(folder_gt, suffix=".nii.gz", join=False)
     have_no_gt = [i for i in files_in_pred if i not in files_in_gt]
-    assert len(have_no_gt) == 0, "Some files in folder_predicted have not ground truth in folder_gt"
+    assert (
+        len(have_no_gt) == 0
+    ), "Some files in folder_predicted have not ground truth in folder_gt"
     have_no_pred = [i for i in files_in_gt if i not in files_in_pred]
     if len(have_no_pred) > 0:
-        print("WARNING! Some files in folder_gt were not predicted (not present in folder_predicted)!")
+        print(
+            "WARNING! Some files in folder_gt were not predicted (not present in folder_predicted)!"
+        )
 
     files_in_gt.sort()
     files_in_pred.sort()
@@ -68,12 +71,19 @@ def evaluate_regions(folder_predicted: str, folder_gt: str, regions: dict, proce
     full_filenames_pred = [join(folder_predicted, i) for i in files_in_pred]
 
     p = Pool(processes)
-    res = p.starmap(evaluate_case, zip(full_filenames_pred, full_filenames_gt, [list(regions.values())] * len(files_in_gt)))
+    res = p.starmap(
+        evaluate_case,
+        zip(
+            full_filenames_pred,
+            full_filenames_gt,
+            [list(regions.values())] * len(files_in_gt),
+        ),
+    )
     p.close()
     p.join()
 
     all_results = {r: [] for r in region_names}
-    with open(join(folder_predicted, 'summary.csv'), 'w') as f:
+    with open(join(folder_predicted, "summary.csv"), "w") as f:
         f.write("casename")
         for r in region_names:
             f.write(",%s" % r)
@@ -87,22 +97,22 @@ def evaluate_regions(folder_predicted: str, folder_gt: str, regions: dict, proce
                 all_results[r].append(dc)
             f.write("\n")
 
-        f.write('mean')
+        f.write("mean")
         for r in region_names:
             f.write(",%02.4f" % np.nanmean(all_results[r]))
         f.write("\n")
-        f.write('median')
+        f.write("median")
         for r in region_names:
             f.write(",%02.4f" % np.nanmedian(all_results[r]))
         f.write("\n")
 
-        f.write('mean (nan is 1)')
+        f.write("mean (nan is 1)")
         for r in region_names:
             tmp = np.array(all_results[r])
             tmp[np.isnan(tmp)] = 1
             f.write(",%02.4f" % np.mean(tmp))
         f.write("\n")
-        f.write('median (nan is 1)')
+        f.write("median (nan is 1)")
         for r in region_names:
             tmp = np.array(all_results[r])
             tmp[np.isnan(tmp)] = 1
@@ -110,6 +120,6 @@ def evaluate_regions(folder_predicted: str, folder_gt: str, regions: dict, proce
         f.write("\n")
 
 
-if __name__ == '__main__':
-    collect_cv_niftis('./', './cv_niftis')
-    evaluate_regions('./cv_niftis/', './gt_niftis/', get_brats_regions())
+if __name__ == "__main__":
+    collect_cv_niftis("./", "./cv_niftis")
+    evaluate_regions("./cv_niftis/", "./gt_niftis/", get_brats_regions())
