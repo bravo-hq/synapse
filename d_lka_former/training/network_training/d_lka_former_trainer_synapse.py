@@ -96,7 +96,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        self.deep_supervision = True ############################# YOUSEF HERE
+        self.deep_supervision = False ############################# YOUSEF HERE
         self.trans_block = trans_block
         self.skip_connections = skip_connections
 
@@ -237,7 +237,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     trans_block=self.trans_block,
         #     skip_connections=self.skip_connections,
         # )
-        self.network=MainModel_v2(
+        self.network=MainModel(
             spatial_shapes= self.crop_size,
             in_channels= self.input_channels,
             out_channels=self.num_classes,
@@ -262,8 +262,8 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             dec_cnn_tcv_kernel_sizes= [7,7],
             
             ############################# YOUSEF HERE
-            hyb_use_cnn= [True,True],
-            do_ds=True,
+#             hyb_use_cnn= [True,True],
+#             do_ds=True,
         )
 
         if torch.cuda.is_available():
