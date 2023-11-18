@@ -466,7 +466,7 @@ class Model(SegmentationNetwork):
         
         # ------------------------------------- Decoder --------------------------------
         self.hyb_decoder = HybridDecoder(
-            return_outs=self.do_ds,
+            # return_outs=self.do_ds,
             spatial_dims=spatial_dims,
             in_channels=enc_hyb_out_channels,
             features=dec_hyb_features,
@@ -485,7 +485,7 @@ class Model(SegmentationNetwork):
         )
         
         self.cnn_decoder = CNNDecoder(
-            return_outs=self.do_ds,
+            # return_outs=self.do_ds,
             spatial_dims=spatial_dims,
             in_channels=dec_hyb_features[-1],
             skip_channels=dec_cnn_skip_channels,
