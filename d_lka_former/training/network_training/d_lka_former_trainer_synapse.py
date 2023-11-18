@@ -41,6 +41,7 @@ from d_lka_former.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 from fvcore.nn import FlopCountAnalysis
 from d_lka_former.network_architecture.synapse.main_model.models.dLKA import Model as MainModel
+from d_lka_former.network_architecture.synapse.main_model.models.main import Model as MainModel_v2
 
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
@@ -77,7 +78,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2 ############################# YOUSEF HERE
+        self.initial_lr = 1.5e-2 ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -236,7 +237,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     trans_block=self.trans_block,
         #     skip_connections=self.skip_connections,
         # )
-        self.network=MainModel(
+        self.network=MainModel_v2(
             spatial_shapes= self.crop_size,
             in_channels= self.input_channels,
             out_channels=self.num_classes,
@@ -259,6 +260,10 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             # decoder params
             dec_hyb_tcv_kernel_sizes= [7,7,7],
             dec_cnn_tcv_kernel_sizes= [7,7],
+            
+            ############################# YOUSEF HERE
+            hyb_use_cnn= [True,True],
+            do_ds=True,
         )
 
         if torch.cuda.is_available():
