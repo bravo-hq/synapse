@@ -25,7 +25,6 @@ from ..modules.layers import LayerNorm
 from ..modules.dynunet_blocks import get_conv_layer, UnetResBlock
 from ..modules.deform_conv import DeformConvPack
 from ..modules.dynunet_blocks import get_padding
-from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 
 
 class BaseBlock(nn.Module):
@@ -74,7 +73,7 @@ class CNNBlock(BaseBlock):
 
 
 class CNNEncoder(nn.Module):
-    def __init__(self, in_channels, kernel_sizes, features, strides, maxpools, dropouts, deform_cnn=False) -> Any:
+    def __init__(self, in_channels, kernel_sizes, features, strides, maxpools, dropouts, deforms) -> Any:
         super().__init__()
         assert isinstance(kernel_sizes, list), "kernel_sizes must be a list"
         assert isinstance(features, list), "features must be a list"
@@ -89,13 +88,13 @@ class CNNEncoder(nn.Module):
         
         self.encoder_blocks = nn.ModuleList()
         
-        for (ich, och), ks, st, mp, do in zip(in_out_channles, kernel_sizes, strides, maxpools, dropouts):
+        for (ich, och), ks, st, mp, do, dfrm in zip(in_out_channles, kernel_sizes, strides, maxpools, dropouts, deforms):
             encoder = CNNBlock(
                 in_channels=ich,
                 out_channels=och,
                 kernel_size=ks,
                 stride=1 if mp else st,
-                deform_cnn=deform_cnn,
+                deform_cnn=dfrm,
                 dropout=do,
             )
             if mp:
@@ -179,6 +178,7 @@ class HybridEncoder(nn.Module):
                  tf_repeats: list[int],
                  tf_num_heads: list[int],
                  tf_dropouts: list[float]|float,
+                 cnn_deforms: list[bool],
                  spatial_dims=3,
                  trans_block=TransformerBlock,
                  *args: Any, **kwds: Any) -> Any:
@@ -193,23 +193,23 @@ class HybridEncoder(nn.Module):
         
         self.encoder_blocks = nn.ModuleList()
         infos = zip(
-            io_channles, use_cnn, cnn_kernel_sizes, cnn_strides, cnn_maxpools, cnn_dropouts, 
+            io_channles, use_cnn, cnn_kernel_sizes, cnn_strides, cnn_maxpools, cnn_dropouts, cnn_deforms,
             tf_input_sizes, tf_proj_sizes, tf_repeats, tf_num_heads, tf_dropouts
         )
-        for (ich, och), ucnn, cnnks, cnnst, cnnmp, cnndo, tfis, tfps, tfr, tfnh, tfdo in infos:            
+        for (ich, och), ucnn, cnnks, cnnst, cnnmp, cnndo, cnndfrm, tfis, tfps, tfr, tfnh, tfdo in infos:            
             block = HybEncBlk(
                 in_channels=ich,    # 4,
                 out_channels=och,   # 32,
                 kernel_size=cnnks,  # 5,
                 stride=cnnst,       # 2,
                 dropout=cnndo,      # 0.1,
+                deform_cnn=cnndfrm, # False
                 tf_input_size=tfis, # ,
                 tf_proj_size=tfps,  # ,
                 tf_repeats=tfr,     # 3,
                 tf_num_heads=tfnh,  # ,
                 tf_dropout=tfdo,    # ,
                 trans_block=trans_block,
-                # deform_cnn=True,
                 use_conv=ucnn,
             )
             self.encoder_blocks.append(block)
@@ -230,9 +230,9 @@ class CNNDecoder(nn.Module):
                  skip_channels,
                  cnn_kernel_sizes,
                  cnn_dropouts, 
+                 deforms,
                  tcv_kernel_sizes, 
                  tcv_strides,
-                 deform_cnn=False,
                  spatial_dims=3) -> Any:
         super().__init__()
         assert isinstance(cnn_kernel_sizes, list), "cnn_kernel_sizes must be a list"
@@ -248,8 +248,8 @@ class CNNDecoder(nn.Module):
 
         self.decoder_blocks = nn.ModuleList()
 
-        info = zip(in_out_channles, skip_channels, cnn_kernel_sizes, cnn_dropouts, tcv_kernel_sizes, tcv_strides)
-        for (ich, och), skch, cnnks, cnndo, tcvks, tcvst in info:
+        info = zip(in_out_channles, skip_channels, cnn_kernel_sizes, cnn_dropouts, deforms, tcv_kernel_sizes, tcv_strides)
+        for (ich, och), skch, cnnks, cnndo, cnndfrm, tcvks, tcvst in info:
             cnn_block = UnetResBlock
             decoder = DLKAFormer_DecoderBlock(
                 spatial_dims=spatial_dims,
@@ -261,7 +261,7 @@ class CNNDecoder(nn.Module):
                 cnn_dropout=cnndo,
                 tcv_kernel_size=tcvks,
                 tcv_stride=tcvst,
-                deform_cnn=deform_cnn,
+                deform_cnn=cnndfrm,
                 trans_block=None,
             )
             self.decoder_blocks.append(decoder)
@@ -288,6 +288,7 @@ class HybridDecoder(nn.Module):
                  use_cnn: list[bool],
                  cnn_kernel_sizes: list[int|tuple],
                  cnn_dropouts: list[float]|float,
+                 cnn_deforms: list[bool],
                  tcv_strides: list[int|tuple],
                  tcv_kernel_sizes: list[int|tuple], 
                  tf_input_sizes: list[int],
@@ -309,10 +310,10 @@ class HybridDecoder(nn.Module):
         
         self.decoder_blocks = nn.ModuleList()
         infos = zip(
-            io_channles, skip_channels, use_cnn, cnn_kernel_sizes, cnn_dropouts, tcv_kernel_sizes, tcv_strides,
+            io_channles, skip_channels, use_cnn, cnn_kernel_sizes, cnn_dropouts, cnn_deforms, tcv_kernel_sizes, tcv_strides,
             tf_input_sizes, tf_proj_sizes, tf_repeats, tf_num_heads, tf_dropouts
         )
-        for (ich, och), skch, ucnn, cnnks, cnndo, tcvks, tcvst, tfis, tfps, tfr, tfnh, tfdo in infos:            
+        for (ich, och), skch, ucnn, cnnks, cnndo, cnndfrm, tcvks, tcvst, tfis, tfps, tfr, tfnh, tfdo in infos:            
             cnn_block = UnetResBlock if ucnn else None
             decoder = DLKAFormer_DecoderBlock(
                 spatial_dims=spatial_dims,
@@ -322,6 +323,7 @@ class HybridDecoder(nn.Module):
                 cnn_block=cnn_block,
                 cnn_kernel_size=cnnks,
                 cnn_dropout=cnndo,
+                deform_cnn=cnndfrm,
                 tcv_kernel_size=tcvks,
                 tcv_stride=tcvst,
                 tf_input_size=tfis,
@@ -362,19 +364,19 @@ class CNNContextBridge(nn.Module):
 
 
 
-class Model(SegmentationNetwork):
+class Model(nn.Module):
     def __init__(self, spatial_shapes, do_ds=False, in_channels=4, out_channels=3,
                  
                  # encoder params
-                 cnn_kernel_sizes=[5,3], cnn_features=[32,64], cnn_strides=[2,2], cnn_maxpools=[0,1], cnn_dropouts=0.1,
+                 cnn_kernel_sizes=[5,3], cnn_features=[32,64], cnn_strides=[2,2], cnn_maxpools=[0,1], cnn_dropouts=0.1, cnn_deforms=[True, True],
                  hyb_use_cnn=[True, True], hyb_kernel_sizes=[3,3,3], hyb_features=[128,256,512], hyb_strides=[2,2,2], hyb_maxpools=[0,0,0], hyb_cnn_dropouts=0.1, 
-                 hyb_tf_proj_sizes=[32, 64, 64], hyb_tf_repeats=[3,3,3], hyb_tf_num_heads=[4,4,4], hyb_tf_dropouts=0.15,
+                 hyb_tf_proj_sizes=[32, 64, 64], hyb_tf_repeats=[3,3,3], hyb_tf_num_heads=[4,4,4], hyb_tf_dropouts=0.15, hyb_deforms=[False, False],
 
                  # decoder params
-                 dec_hyb_tcv_kernel_sizes=[5,5,5], dec_cnn_tcv_kernel_sizes=[5,5,5], 
+                 dec_hyb_tcv_kernel_sizes=[5,5,5], dec_cnn_tcv_kernel_sizes=[5,5,5], dec_cnn_deforms=None,
                  dec_hyb_use_cnn=None, dec_hyb_kernel_sizes=None, dec_hyb_features=None, dec_hyb_cnn_dropouts=None, 
                  dec_hyb_tf_proj_sizes=None, dec_hyb_tf_repeats=None, dec_hyb_tf_num_heads=None, dec_hyb_tf_dropouts=None,
-                 dec_cnn_kernel_sizes=None, dec_cnn_features=None, dec_cnn_dropouts=None,
+                 dec_cnn_kernel_sizes=None, dec_cnn_features=None, dec_cnn_dropouts=None, dec_hyb_deforms=None
     ):
         super().__init__()
         self.do_ds = do_ds
@@ -409,8 +411,11 @@ class Model(SegmentationNetwork):
         if not dec_hyb_tf_repeats   : dec_hyb_tf_repeats = hyb_tf_repeats[::-1]
         if not dec_hyb_tf_num_heads : dec_hyb_tf_num_heads = hyb_tf_num_heads[::-1]
         if not dec_hyb_tf_dropouts  : dec_hyb_tf_dropouts = hyb_tf_dropouts[::-1]
+        if not dec_hyb_deforms      : dec_hyb_deforms = hyb_deforms[::-1]
         if not dec_cnn_kernel_sizes : dec_cnn_kernel_sizes = cnn_kernel_sizes[::-1]
         if not dec_cnn_dropouts     : dec_cnn_dropouts = cnn_dropouts[::-1]
+        if not dec_cnn_deforms      : dec_cnn_deforms = cnn_deforms[::-1]
+        
 
         # calculate spatial_shapes in encoder and decoder diferent layers
         enc_spatial_shaps = [spatial_shapes]
@@ -444,7 +449,7 @@ class Model(SegmentationNetwork):
             strides=cnn_strides,
             maxpools=cnn_maxpools,
             dropouts=cnn_dropouts,
-            deform_cnn=True,
+            deforms=cnn_deforms,
         )
         
         self.hyb_encoder = HybridEncoder(
@@ -454,7 +459,7 @@ class Model(SegmentationNetwork):
             cnn_kernel_sizes=hyb_kernel_sizes,
             cnn_strides=hyb_strides,
             cnn_maxpools=hyb_maxpools,
-            # deform_cnn=True,
+            cnn_deforms=hyb_deforms,
             cnn_dropouts=hyb_cnn_dropouts,
             tf_input_sizes=enc_hyb_tf_input_sizes,
             tf_proj_sizes=hyb_tf_proj_sizes,
@@ -466,7 +471,7 @@ class Model(SegmentationNetwork):
         
         # ------------------------------------- Decoder --------------------------------
         self.hyb_decoder = HybridDecoder(
-            # return_outs=self.do_ds,
+            # return_outs=self.use_ds,
             spatial_dims=spatial_dims,
             in_channels=enc_hyb_out_channels,
             features=dec_hyb_features,
@@ -474,6 +479,7 @@ class Model(SegmentationNetwork):
             use_cnn=dec_hyb_use_cnn,
             cnn_kernel_sizes=dec_hyb_kernel_sizes,
             cnn_dropouts=dec_cnn_dropouts,
+            cnn_deforms=dec_hyb_deforms,
             tcv_kernel_sizes=dec_hyb_tcv_kernel_sizes,
             tcv_strides=hyb_strides[::-1],
             tf_input_sizes=dec_hyb_tf_input_sizes,
@@ -485,7 +491,7 @@ class Model(SegmentationNetwork):
         )
         
         self.cnn_decoder = CNNDecoder(
-            # return_outs=self.do_ds,
+            # return_outs=self.use_ds,
             spatial_dims=spatial_dims,
             in_channels=dec_hyb_features[-1],
             skip_channels=dec_cnn_skip_channels,
@@ -494,7 +500,7 @@ class Model(SegmentationNetwork):
             features=dec_cnn_features,
             tcv_kernel_sizes=dec_cnn_tcv_kernel_sizes,
             tcv_strides=cnn_strides[::-1],
-            # deform_cnn=True
+            deforms=dec_cnn_deforms,
         )
         
         self.out = UnetOutBlock(
@@ -533,6 +539,6 @@ class Model(SegmentationNetwork):
         x = self.out(x)
         
         if self.do_ds:
-            return (hyb_outs+cnn_outs[:-1]+[x])[::-1][:3]
+            return x, hyb_outs+cnn_outs
         
         return x

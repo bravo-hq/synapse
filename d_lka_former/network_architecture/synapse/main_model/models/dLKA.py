@@ -25,7 +25,6 @@ from ..modules.layers import LayerNorm
 from ..modules.dynunet_blocks import get_conv_layer, UnetResBlock
 from ..modules.deform_conv import DeformConvPack
 from ..modules.dynunet_blocks import get_padding
-from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 
 
 class BaseBlock(nn.Module):
@@ -339,7 +338,7 @@ class HybridDecoder(nn.Module):
         return x
 
 
-class Model(SegmentationNetwork):
+class Model(nn.Module):
     def __init__(self, spatial_shapes, in_channels=4, out_channels=3,
                  
                  # encoder params
@@ -474,7 +473,6 @@ class Model(SegmentationNetwork):
             out_channels=out_channels,
             dropout=0
         )
-        self.do_ds=False
 
     def forward(self, x):
         x = self.init(x)

@@ -237,29 +237,32 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     trans_block=self.trans_block,
         #     skip_connections=self.skip_connections,
         # )
-        self.network=MainModel(
+        self.network=MainModel_v2(
             spatial_shapes= self.crop_size,
             in_channels= self.input_channels,
             out_channels=self.num_classes,
             # encoder params
-            cnn_kernel_sizes= [7,5],
-            cnn_features= [8,16],
+            cnn_kernel_sizes= [5,3],
+            cnn_features= [16,16],
             cnn_strides= [2,2],
             cnn_maxpools= [False, True],
             cnn_dropouts= 0.0,
-            hyb_kernel_sizes= [5,5,5],
+            hyb_kernel_sizes= [3,3,3],
             hyb_features= [32,64,128],
             hyb_strides= [2,2,2],
             hyb_maxpools= [True, True, True],
             hyb_cnn_dropouts= 0.0,
             hyb_tf_proj_sizes= [32,64,64],
-            hyb_tf_repeats= [2,2,1],
-            hyb_tf_num_heads= [4,4,4],
+            hyb_tf_repeats= [1,1,1],
+            hyb_tf_num_heads= [4,8,16],
             hyb_tf_dropouts= 0.15,
+            cnn_deforms= [True, True],
+            hyb_use_cnn= [True,True,True],
+            hyb_deforms= [False,False,False],
 
             # decoder params
-            dec_hyb_tcv_kernel_sizes= [7,7,7],
-            dec_cnn_tcv_kernel_sizes= [7,7],
+            dec_hyb_tcv_kernel_sizes= [5,5,5],
+            dec_cnn_tcv_kernel_sizes= [5,7],
             
             ############################# YOUSEF HERE
 #             hyb_use_cnn= [True,True],

@@ -511,7 +511,7 @@ class SegmentationNetwork(NeuralNetwork):
                 add_for_nb_of_preds = self._gaussian_3d
             else:
                 add_for_nb_of_preds = np.ones(data.shape[1:], dtype=np.float32)
-
+            
             aggregated_results = np.zeros(
                 [self.num_classes] + list(data.shape[1:]), dtype=np.float32
             )
