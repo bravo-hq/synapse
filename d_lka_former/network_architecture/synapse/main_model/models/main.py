@@ -25,6 +25,7 @@ from ..modules.layers import LayerNorm
 from ..modules.dynunet_blocks import get_conv_layer, UnetResBlock
 from ..modules.deform_conv import DeformConvPack
 from ..modules.dynunet_blocks import get_padding
+from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 
 
 class BaseBlock(nn.Module):
@@ -364,7 +365,7 @@ class CNNContextBridge(nn.Module):
 
 
 
-class Model(nn.Module):
+class Model(SegmentationNetwork):
     def __init__(self, spatial_shapes, do_ds=False, in_channels=4, out_channels=3,
                  
                  # encoder params
@@ -513,6 +514,7 @@ class Model(nn.Module):
         # self.cnn_context_bridge = CNNContextBridge(
         #     ...
         # )
+        self.num_classes = out_channels
 
 
     def forward(self, x):
