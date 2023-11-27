@@ -41,7 +41,7 @@ from d_lka_former.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 from fvcore.nn import FlopCountAnalysis
 from d_lka_former.network_architecture.synapse.main_model.models.dLKA import Model as MainModel
-from d_lka_former.network_architecture.synapse.main_model.models.main import Model as MainModel_v2
+from d_lka_former.network_architecture.synapse.main_model.models.main import Model_Bridge as MainModel_v2
 
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
@@ -78,7 +78,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1.5e-2 ############################# YOUSEF HERE
+        self.initial_lr = 1e-2 ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -254,9 +254,9 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             hyb_cnn_dropouts= 0.0,
             hyb_tf_proj_sizes= [32,64,64],
             hyb_tf_repeats= [1,1,1],
-            hyb_tf_num_heads= [4,8,16],
+            hyb_tf_num_heads= [2,4,8],
             hyb_tf_dropouts= 0.15,
-            cnn_deforms= [True, True],
+            cnn_deforms= [False, False],
             hyb_use_cnn= [True,True,True],
             hyb_deforms= [False,False,False],
 
@@ -264,9 +264,27 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             dec_hyb_tcv_kernel_sizes= [5,5,5],
             dec_cnn_tcv_kernel_sizes= [5,7],
             
-            ############################# YOUSEF HERE
-#             hyb_use_cnn= [True,True],
-#             do_ds=True,
+            dec_hyb_kernel_sizes= None,
+            dec_hyb_features= None,
+            dec_hyb_cnn_dropouts= None,
+            dec_hyb_tf_proj_sizes= None,
+            dec_hyb_tf_repeats= None,
+            dec_hyb_tf_num_heads= None,
+            dec_hyb_tf_dropouts= None,
+            dec_cnn_kernel_sizes= None,
+            dec_cnn_features= None,
+            dec_cnn_dropouts= None,
+
+            dec_cnn_deforms= [False, False],
+            dec_hyb_deforms= None,
+
+            # bridge 
+            br_skip_levels= [0,1,2,3],
+            br_c_attn_use= True,
+            br_s_att_use= True,
+            br_m_att_use= False,
+            br_use_p_ttn_w= True,
+            do_ds= False,
         )
 
         if torch.cuda.is_available():

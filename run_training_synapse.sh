@@ -3,7 +3,7 @@
 DATASET_PATH=/cabinet/dataset/Synapse/NN-Unet/DATASET_Synapse
 
 export PYTHONPATH=./
-export RESULTS_FOLDER=/cabinet/yousef/synapse/output_synapse_test_continuing_ds
+export RESULTS_FOLDER=/cabinet/yousef/synapse/output_synapse_test_continuing_ds_BRIDGE_JCS
 export d_lka_former_preprocessed="$DATASET_PATH"/d_lka_former_raw/d_lka_former_raw_data/Task02_Synapse
 export d_lka_former_raw_data_base="$DATASET_PATH"/d_lka_former_raw
 
