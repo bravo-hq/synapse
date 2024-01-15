@@ -954,7 +954,9 @@ class BridgeModule(nn.Module):
 
         return outs[::-1]
 
+
 from d_lka_former.network_architecture.neural_network import SegmentationNetwork
+
 
 class Model_Bridge(SegmentationNetwork):
     def __init__(

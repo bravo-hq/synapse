@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DATASET_PATH=/cabinet/dataset/Synapse/NN-Unet/DATASET_Synapse
-CHECKPOINT_PATH=/cabinet/yousef/synapse/output_synapse_test_continuing_ds_BRIDGE_JCS/
+CHECKPOINT_PATH=/cabinet/yousef/synapse/output_synapse_test_lhunet_res_coll/
 export PYTHONPATH=./
 export RESULTS_FOLDER="$CHECKPOINT_PATH"
 export d_lka_former_preprocessed="$DATASET_PATH"/d_lka_former_raw/d_lka_former_raw_data/Task02_Synapse

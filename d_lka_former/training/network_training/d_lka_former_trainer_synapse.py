@@ -40,8 +40,15 @@ from torch.cuda.amp import autocast
 from d_lka_former.training.learning_rate.poly_lr import poly_lr
 from batchgenerators.utilities.file_and_folder_operations import *
 from fvcore.nn import FlopCountAnalysis
-from d_lka_former.network_architecture.synapse.main_model.models.dLKA import Model as MainModel
-from d_lka_former.network_architecture.synapse.main_model.models.main import Model_Bridge as MainModel_v2
+from d_lka_former.network_architecture.synapse.main_model.models.dLKA import (
+    Model as MainModel,
+)
+from d_lka_former.network_architecture.synapse.main_model.models.main import (
+    Model_Bridge as MainModel_v2,
+)
+from d_lka_former.network_architecture.synapse.lhunet.models.v7 import (
+    LHUNet as LHUNet_v7,
+)
 
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
@@ -78,7 +85,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2 ############################# YOUSEF HERE
+        self.initial_lr = 1e-2  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -96,7 +103,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        self.deep_supervision = False ############################# YOUSEF HERE
+        self.deep_supervision = False  ############################# YOUSEF HERE
         self.trans_block = trans_block
         self.skip_connections = skip_connections
 
@@ -116,10 +123,12 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             if force_load_plans or (self.plans is None):
                 self.load_plans_file()
 
-            self.plans["plans_per_stage"][self.stage]["pool_op_kernel_sizes"] = [ ############################# YOUSEF HERE
+            self.plans["plans_per_stage"][self.stage][
+                "pool_op_kernel_sizes"
+            ] = [  ############################# YOUSEF HERE
                 [2, 4, 4],
                 [2, 2, 2],
-                [2, 2, 2], 
+                [2, 2, 2],
             ]
             self.process_plans(self.plans)
 
@@ -237,54 +246,112 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     trans_block=self.trans_block,
         #     skip_connections=self.skip_connections,
         # )
-        self.network=MainModel_v2(
-            spatial_shapes= self.crop_size,
-            in_channels= self.input_channels,
+        # self.network=MainModel_v2(
+        #     spatial_shapes= self.crop_size,
+        #     in_channels= self.input_channels,
+        #     out_channels=self.num_classes,
+        #     # encoder params
+        #     cnn_kernel_sizes= [5,3],
+        #     cnn_features= [16,16],
+        #     cnn_strides= [2,2],
+        #     cnn_maxpools= [False, True],
+        #     cnn_dropouts= 0.0,
+        #     hyb_kernel_sizes= [3,3,3],
+        #     hyb_features= [32,64,128],
+        #     hyb_strides= [2,2,2],
+        #     hyb_maxpools= [True, True, True],
+        #     hyb_cnn_dropouts= 0.0,
+        #     hyb_tf_proj_sizes= [32,64,64],
+        #     hyb_tf_repeats= [1,1,1],
+        #     hyb_tf_num_heads= [2,4,8],
+        #     hyb_tf_dropouts= 0.15,
+        #     cnn_deforms= [False, False],
+        #     hyb_use_cnn= [True,True,True],
+        #     hyb_deforms= [False,False,False],
+
+        #     # decoder params
+        #     dec_hyb_tcv_kernel_sizes= [5,5,5],
+        #     dec_cnn_tcv_kernel_sizes= [5,7],
+
+        #     dec_hyb_kernel_sizes= None,
+        #     dec_hyb_features= None,
+        #     dec_hyb_cnn_dropouts= None,
+        #     dec_hyb_tf_proj_sizes= None,
+        #     dec_hyb_tf_repeats= None,
+        #     dec_hyb_tf_num_heads= None,
+        #     dec_hyb_tf_dropouts= None,
+        #     dec_cnn_kernel_sizes= None,
+        #     dec_cnn_features= None,
+        #     dec_cnn_dropouts= None,
+
+        #     dec_cnn_deforms= [False, False],
+        #     dec_hyb_deforms= None,
+
+        #     # bridge
+        #     br_skip_levels= [0,1,2,3],
+        #     br_c_attn_use= True,
+        #     br_s_att_use= True,
+        #     br_m_att_use= False,
+        #     br_use_p_ttn_w= True,
+        #     do_ds= False,
+        # )
+
+        self.network = LHUNet_v7(
+            spatial_shapes=self.crop_size,
+            in_channels=self.input_channels,
             out_channels=self.num_classes,
+            do_ds=False,
             # encoder params
-            cnn_kernel_sizes= [5,3],
-            cnn_features= [16,16],
-            cnn_strides= [2,2],
-            cnn_maxpools= [False, True],
-            cnn_dropouts= 0.0,
-            hyb_kernel_sizes= [3,3,3],
-            hyb_features= [32,64,128],
-            hyb_strides= [2,2,2],
-            hyb_maxpools= [True, True, True],
-            hyb_cnn_dropouts= 0.0,
-            hyb_tf_proj_sizes= [32,64,64],
-            hyb_tf_repeats= [1,1,1],
-            hyb_tf_num_heads= [2,4,8],
-            hyb_tf_dropouts= 0.15,
-            cnn_deforms= [False, False],
-            hyb_use_cnn= [True,True,True],
-            hyb_deforms= [False,False,False],
-
+            cnn_kernel_sizes=[5, 3],
+            cnn_features=[16, 32],
+            cnn_strides=[2, 2],
+            cnn_maxpools=[False, True],
+            cnn_dropouts=0.0,
+            cnn_blocks="nn",  # n= resunet, d= deformconv, b= basicunet,
+            hyb_kernel_sizes=[3, 3, 3],
+            hyb_features=[32, 64, 128],
+            hyb_strides=[2, 2, 2],
+            hyb_maxpools=[True, True, True],
+            hyb_cnn_dropouts=0.0,
+            hyb_tf_proj_sizes=[32, 64, 128],
+            hyb_tf_repeats=[1, 1, 1],
+            hyb_tf_num_heads=[2, 4, 8],
+            hyb_tf_dropouts=0.0,
+            hyb_cnn_blocks="nnn",  # n= resunet, d= deformconv, b= basicunet,
+            hyb_vit_blocks="SSC",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
+            # hyb_vit_sandwich= False,
+            hyb_skip_mode="cat",  # "sum" or "cat",
+            hyb_arch_mode="residual",  # sequential, residual, parallel, collective,
+            hyb_res_mode="sum",  # "sum" or "cat",
+            # bridge
+            br_use=True,
+            br_skip_levels=[0, 1, 2, 3],
+            br_c_attn_use=True,
+            br_s_att_use=True,
+            br_m_att_use=True,
+            br_use_p_ttn_w=True,
             # decoder params
-            dec_hyb_tcv_kernel_sizes= [5,5,5],
-            dec_cnn_tcv_kernel_sizes= [5,7],
-            
-            dec_hyb_kernel_sizes= None,
-            dec_hyb_features= None,
-            dec_hyb_cnn_dropouts= None,
-            dec_hyb_tf_proj_sizes= None,
-            dec_hyb_tf_repeats= None,
-            dec_hyb_tf_num_heads= None,
-            dec_hyb_tf_dropouts= None,
-            dec_cnn_kernel_sizes= None,
-            dec_cnn_features= None,
-            dec_cnn_dropouts= None,
-
-            dec_cnn_deforms= [False, False],
-            dec_hyb_deforms= None,
-
-            # bridge 
-            br_skip_levels= [0,1,2,3],
-            br_c_attn_use= True,
-            br_s_att_use= True,
-            br_m_att_use= False,
-            br_use_p_ttn_w= True,
-            do_ds= False,
+            dec_hyb_tcv_kernel_sizes=[5, 5, 5],
+            dec_cnn_tcv_kernel_sizes=[5, 7],
+            dec_cnn_blocks=None,
+            dec_tcv_bias=False,
+            dec_hyb_tcv_bias=False,
+            dec_hyb_kernel_sizes=None,
+            dec_hyb_features=None,
+            dec_hyb_cnn_dropouts=None,
+            dec_hyb_tf_proj_sizes=None,
+            dec_hyb_tf_repeats=None,
+            dec_hyb_tf_num_heads=None,
+            dec_hyb_tf_dropouts=None,
+            dec_cnn_kernel_sizes=None,
+            dec_cnn_features=None,
+            dec_cnn_dropouts=None,
+            dec_hyb_cnn_blocks=None,
+            dec_hyb_vit_blocks=None,
+            # dec_hyb_vit_sandwich= None,
+            dec_hyb_skip_mode=None,
+            dec_hyb_arch_mode="collective",  # sequential, residual, parallel, collective, sequential-lite,
+            dec_hyb_res_mode=None,
         )
 
         if torch.cuda.is_available():
