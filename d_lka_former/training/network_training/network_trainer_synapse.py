@@ -537,6 +537,11 @@ class NetworkTrainer_synapse(object):
         if not self.was_initialized:
             self.initialize(True)
 
+        if len(self.all_val_losses) == 0:
+            self.best_loss = 1000
+        else:
+            self.best_loss = self.all_val_losses[-1]
+
         while self.epoch < self.max_num_epochs:
             self.print_to_log_file("\nepoch: ", self.epoch)
             epoch_start_time = time()
