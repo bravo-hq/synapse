@@ -338,7 +338,7 @@ class LHUNet(SegmentationNetwork):
 
         self.num_classes = out_channels
 
-        self.apply(self._init_weights)
+        # self.apply(self._init_weights)
 
     def forward(self, x):
         in_x = x.clone()
