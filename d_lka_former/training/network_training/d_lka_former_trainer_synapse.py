@@ -46,8 +46,8 @@ from d_lka_former.network_architecture.synapse.main_model.models.dLKA import (
 from d_lka_former.network_architecture.synapse.main_model.models.main import (
     Model_Bridge as MainModel_v2,
 )
-from d_lka_former.network_architecture.synapse.lhunet.models.v7 import (
-    LHUNet as LHUNet_v7,
+from d_lka_former.network_architecture.synapse.lhunet.models.v8 import (
+    LHUNet as LHUNet_v8,
 )
 
 
@@ -85,7 +85,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2  ############################# YOUSEF HERE
+        self.initial_lr = 7e-3  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -103,7 +103,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.num_heads = [6, 12, 24, 48]
         self.embedding_patch_size = [2, 4, 4]
         self.window_size = [4, 4, 8, 4]
-        self.deep_supervision = False  ############################# YOUSEF HERE
+        self.deep_supervision = True  ############################# YOUSEF HERE
         self.trans_block = trans_block
         self.skip_connections = skip_connections
 
@@ -126,7 +126,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             self.plans["plans_per_stage"][self.stage][
                 "pool_op_kernel_sizes"
             ] = [  ############################# YOUSEF HERE
-                [2, 4, 4],
+                [2, 2, 2],
                 [2, 2, 2],
                 [2, 2, 2],
             ]
@@ -296,11 +296,11 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     do_ds= False,
         # )
 
-        self.network = LHUNet_v7(
+        self.network = LHUNet_v8(
             spatial_shapes=self.crop_size,
             in_channels=self.input_channels,
             out_channels=self.num_classes,
-            do_ds=False,
+            do_ds=self.deep_supervision,
             # encoder params
             cnn_kernel_sizes=[5, 3],
             cnn_features=[16, 32],
