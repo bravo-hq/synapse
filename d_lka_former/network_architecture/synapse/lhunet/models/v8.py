@@ -4,7 +4,7 @@ from torch import nn
 from torch.nn import functional as F
 from ..blocks.cnn import UnetResBlock, UnetOutBlock
 from ..blocks import *
-from ..blocks.base import BaseBlock
+from ..blocks.base import BaseBlock, get_conv_layer
 from ..blocks.hyb import get_vit_block
 
 
@@ -336,6 +336,28 @@ class LHUNet(SegmentationNetwork):
             ),
         )
 
+        if self.do_ds:
+            self.out_1 = (
+                get_conv_layer(
+                    spatial_dims,
+                    in_channels=dec_cnn_features[-2],
+                    out_channels=out_channels,
+                    kernel_size=1,
+                    stride=1,
+                    dropout=0,
+                    conv_only=True,
+                ),
+            )
+            self.out_2 = get_conv_layer(
+                spatial_dims,
+                in_channels=dec_hyb_features[-1],
+                out_channels=out_channels,
+                kernel_size=1,
+                stride=1,
+                dropout=0,
+                conv_only=True,
+            )
+
         self.num_classes = out_channels
 
         # self.apply(self._init_weights)
@@ -363,4 +385,6 @@ class LHUNet(SegmentationNetwork):
         x = torch.concatenate([x, self.out_skip(in_x)], dim=1)
         x = self.out(x)
 
-        return [x] + dec_cnn_outs[::-1] + dec_hyb_outs[::-1] if self.do_ds else x
+        if self.do_ds:
+            return [x, self.out_1(dec_cnn_outs[-2]), self.out_2(dec_hyb_outs[-1])]
+        return x
