@@ -52,7 +52,7 @@ class Evaluator:
         "False Discovery Rate",
         "Total Positives Test",
         "Total Positives Reference",
-        # "Hausdorff Distance 95" # LEON ADDED THIS
+        "Hausdorff Distance 95" # LEON ADDED THIS
     ]
 
     default_advanced_metrics = [
