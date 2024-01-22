@@ -90,6 +90,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.ds_loss_weights = None
         self.pin_memory = True
         self.load_pretrain_weight = False
+        self.fine_tune = False
 
         self.load_plans_file()
 
@@ -353,6 +354,13 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             dec_hyb_arch_mode="collective",  # sequential, residual, parallel, collective, sequential-lite,
             dec_hyb_res_mode=None,
         )
+
+        if self.fine_tune:
+            print("Loading pretrain weight")
+            pre_trained_path = "/cabinet/yousef/synapse/output_synapse_test_lhunet_res_coll_lr_0.007/d_lka_former/3d_fullres/Task002_Synapse/d_lka_former_trainer_synapse__d_lka_former_Plansv2.1/fold_0/originals/model_final_checkpoint.model"
+            saved_model = torch.load(pre_trained_path, map_location=torch.device("cpu"))
+            self.network.load_state_dict(saved_model["state_dict"])
+            print("Done loading pretrain weight")
 
         if torch.cuda.is_available():
             self.network.cuda()
