@@ -1456,7 +1456,7 @@ class TransformerBlock_SE(nn.Module):
         self.norm = nn.LayerNorm(hidden_size)
         self.gamma = nn.Parameter(1e-6 * torch.ones(hidden_size), requires_grad=True)
         self.se = SEModule(channels=hidden_size, rd_ratio=1./4)
-        self.LKA_block = LKA_Attention3d_SE(d_model=hidden_size, num_heads=num_heads)
+        self.LKA_block = LKA_Attention3d_SE(d_model=hidden_size)
         self.conv51 = UnetResBlock(3, hidden_size, hidden_size, kernel_size=3, stride=1, norm_name="batch")
         self.conv8 = nn.Sequential(nn.Dropout3d(0.1, False), nn.Conv3d(hidden_size, hidden_size, 1))
 
@@ -1543,7 +1543,7 @@ class ChannelAttention_Deform_LKA(nn.Module):
         # qkvv are 4 linear layers (query_shared, key_shared, value_spatial, value_channel)
         self.qkv = nn.Linear(hidden_size, hidden_size * 3, bias=qkv_bias)
 
-        self.lka = LKA_Attention3d_Deform_withChannel(d_model=hidden_size, num_heads=num_heads) 
+        self.lka = LKA_Attention3d_Deform_withChannel(d_model=hidden_size) 
 
         self.attn_drop = nn.Dropout(channel_attn_drop)
         self.attn_drop_2 = nn.Dropout(spatial_attn_drop)
@@ -2004,6 +2004,9 @@ class SpatialAttention_Deform_LKA_sequential(nn.Module):
                  channel_attn_drop=0.1, spatial_attn_drop=0.1):
         super().__init__()
         self.num_heads = num_heads
+        
+#         print(f"\n\n heads: {self.num_heads}, input: {input_size**(1/3)}\n\n")
+        
         self.temperature = nn.Parameter(torch.ones(num_heads, 1, 1))
         # self.temperature2 = nn.Parameter(torch.ones(num_heads, 1, 1))
 
@@ -2014,7 +2017,7 @@ class SpatialAttention_Deform_LKA_sequential(nn.Module):
         self.E = self.F = nn.Linear(input_size, proj_size)
         
         self.norm = nn.LayerNorm(hidden_size) # operates on 'b n c' eith c = hidden_size
-        self.lka = LKA_Attention3d_Deform_withSpatial_sequential(d_model=hidden_size, num_heads=num_heads)
+        self.lka = LKA_Attention3d_Deform_withSpatial_sequential(d_model=hidden_size)
         self.norm2 = nn.LayerNorm(hidden_size)
 
         self.out_proj = nn.Linear(hidden_size, hidden_size)
@@ -2223,7 +2226,7 @@ class SpatialAttention_Deform_LKA(nn.Module):
         # keys and values from HWD-dimension to P-dimension
         self.E = self.F = nn.Linear(input_size, proj_size)
 
-        self.lka = LKA_Attention3d_Deform_withSpatial(d_model=hidden_size, num_heads=num_heads)
+        self.lka = LKA_Attention3d_Deform_withSpatial(d_model=hidden_size)
 
         self.attn_drop = nn.Dropout(channel_attn_drop)
         self.attn_drop_2 = nn.Dropout(spatial_attn_drop)

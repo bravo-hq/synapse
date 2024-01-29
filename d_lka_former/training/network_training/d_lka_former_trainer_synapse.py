@@ -85,7 +85,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 2e-3  ############################# YOUSEF HERE
+        self.initial_lr = 7e-3  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -316,7 +316,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             hyb_cnn_dropouts=0.0,
             hyb_tf_proj_sizes=[32, 64, 128],
             hyb_tf_repeats=[1, 1, 1],
-            hyb_tf_num_heads=[2, 4, 8],
+            hyb_tf_num_heads=[4,8,16],
             hyb_tf_dropouts=0.0,
             hyb_cnn_blocks="nnn",  # n= resunet, d= deformconv, b= basicunet,
             hyb_vit_blocks="SSC",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
