@@ -50,6 +50,11 @@ from d_lka_former.network_architecture.synapse.lhunet.models.v8 import (
     LHUNet as LHUNet_v8,
 )
 
+from d_lka_former.network_architecture.synapse.lhunet.models.v7 import (
+    LHUNet as LHUNet_v7,
+)
+
+
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
     """
@@ -85,7 +90,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 7e-3  ############################# YOUSEF HERE
+        self.initial_lr = 1e-2  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -297,29 +302,29 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     do_ds= False,
         # )
 
-        self.network = LHUNet_v8(
+        self.network = LHUNet_v7(
             spatial_shapes=self.crop_size,
             in_channels=self.input_channels,
             out_channels=self.num_classes,
             do_ds=self.deep_supervision,
             # encoder params
             cnn_kernel_sizes=[5, 3],
-            cnn_features=[16, 32],
+            cnn_features=[32, 64],
             cnn_strides=[2, 2],
             cnn_maxpools=[False, True],
             cnn_dropouts=0.0,
             cnn_blocks="nn",  # n= resunet, d= deformconv, b= basicunet,
             hyb_kernel_sizes=[3, 3, 3],
-            hyb_features=[32, 64, 128],
+            hyb_features=[64,128,256],
             hyb_strides=[2, 2, 2],
             hyb_maxpools=[True, True, True],
             hyb_cnn_dropouts=0.0,
-            hyb_tf_proj_sizes=[32, 64, 128],
+            hyb_tf_proj_sizes=[256,512,1024],
             hyb_tf_repeats=[1, 1, 1],
-            hyb_tf_num_heads=[4,8,16],
+            hyb_tf_num_heads=[4,8,8],
             hyb_tf_dropouts=0.0,
             hyb_cnn_blocks="nnn",  # n= resunet, d= deformconv, b= basicunet,
-            hyb_vit_blocks="SSC",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
+            hyb_vit_blocks="XXL",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
             # hyb_vit_sandwich= False,
             hyb_skip_mode="cat",  # "sum" or "cat",
             hyb_arch_mode="residual",  # sequential, residual, parallel, collective,
