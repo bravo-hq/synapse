@@ -90,7 +90,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 1e-2  ############################# YOUSEF HERE
+        self.initial_lr = 0.007  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -165,7 +165,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                     self.data_aug_params.get("num_threads")
                 )
             )
-            self.data_aug_params["num_threads"] = 4
+            self.data_aug_params["num_threads"] = 8
             print(
                 "Updated num threads: {}".format(
                     self.data_aug_params.get("num_threads")
@@ -302,29 +302,29 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     do_ds= False,
         # )
 
-        self.network = LHUNet_v7(
+        self.network = LHUNet_v8(
             spatial_shapes=self.crop_size,
             in_channels=self.input_channels,
             out_channels=self.num_classes,
             do_ds=self.deep_supervision,
             # encoder params
-            cnn_kernel_sizes=[5, 3],
+            cnn_kernel_sizes=[5, 5],
             cnn_features=[16, 32],
             cnn_strides=[2, 2],
-            cnn_maxpools=[False, True],
+            cnn_maxpools=[False, False],
             cnn_dropouts=0.0,
             cnn_blocks="nn",  # n= resunet, d= deformconv, b= basicunet,
-            hyb_kernel_sizes=[3, 3, 3],
-            hyb_features=[32,64,128],
+            hyb_kernel_sizes=[5, 5, 5],
+            hyb_features=[32, 64, 128],
             hyb_strides=[2, 2, 2],
-            hyb_maxpools=[True, True, True],
+            hyb_maxpools=[False, False, False],
             hyb_cnn_dropouts=0.0,
             hyb_tf_proj_sizes=[128,64,32],
             hyb_tf_repeats=[1, 1, 1],
-            hyb_tf_num_heads=[4,8,8],
-            hyb_tf_dropouts=0.15,
+            hyb_tf_num_heads=[8,16,32],
+            hyb_tf_dropouts=0.1,
             hyb_cnn_blocks="nnn",  # n= resunet, d= deformconv, b= basicunet,
-            hyb_vit_blocks="WWU",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
+            hyb_vit_blocks="SSC",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
             # hyb_vit_sandwich= False,
             hyb_skip_mode="cat",  # "sum" or "cat",
             hyb_arch_mode="residual",  # sequential, residual, parallel, collective,

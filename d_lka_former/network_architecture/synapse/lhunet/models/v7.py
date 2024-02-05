@@ -6,6 +6,7 @@ from ..blocks.cnn import UnetResBlock, UnetOutBlock
 from ..blocks import *
 from ..blocks.base import BaseBlock
 from ..blocks.hyb import get_vit_block
+from ....neural_network import SegmentationNetwork
 
 
 __all__ = ["LHUNet"]
@@ -15,10 +16,9 @@ __all__ = ["LHUNet"]
 Concatenating skips
 Out with ViT
 """
-from d_lka_former.network_architecture.neural_network import SegmentationNetwork
 
 
-class LHUNet(SegmentationNetwork):
+class LHUNet(BaseBlock):
     def __init__(
         self,
         spatial_shapes,

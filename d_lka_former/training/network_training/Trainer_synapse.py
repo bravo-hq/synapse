@@ -387,7 +387,9 @@ class Trainer_synapse(NetworkTrainer_synapse):
 
     def plot_network_architecture(self):
         try:
-            self.print_to_log_file(self.network)
+            # self.print_to_log_file(self.network)
+            pass
+            
             # from batchgenerators.utilities.file_and_folder_operations import join
             # import hiddenlayer as hl
             # if torch.cuda.is_available():
@@ -403,7 +405,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
             self.print_to_log_file(e)
 
             self.print_to_log_file("\nprinting the network instead:\n")
-            self.print_to_log_file(self.network)
+            # self.print_to_log_file(self.network)
             self.print_to_log_file("\n")
         finally:
             if torch.cuda.is_available():
@@ -1018,7 +1020,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
         self.all_val_eval_metrics.append(np.mean(global_dc_per_class))
 
         self.print_to_log_file(
-            "Average global foreground Dice:", str(global_dc_per_class)
+            "Average global foreground Dice: ["+", ".join([f"{n*100:2.2f}" for n in global_dc_per_class])+"]"
         )
         self.print_to_log_file(
             "(interpret this as an estimate for the Dice of the different classes. This is not "
