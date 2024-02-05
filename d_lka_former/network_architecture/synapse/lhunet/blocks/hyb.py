@@ -27,10 +27,10 @@ from ..modules.vit.blocks import (
     TransformerBlock_DLKA3D_SpatialSequential,
     TransformerBlock_DLKA3D_ChannelSequential,
     TransformerBlock_3D_ChannelAtt_ONLY,
-    # TransformerBlock_LKA3D_SpatialParallel,
-    # TransformerBlock_DLKA3D_SpatialParallel,
-    # TransformerBlock_LKA_ChannelNormParallel,
-    # TransformerBlock_DLKA3D_ChannelParallel,
+    TransformerBlock_LKA3D_SpatialParallel,
+    TransformerBlock_DLKA3D_SpatialParallel,
+    TransformerBlock_LKA3D_ChannelNormParallel,
+    TransformerBlock_DLKA3D_ChannelParallel,
     # TransformerBlock_LKA3D_ChannelParallel_tempsphead,
     # TransformerBlock_3D_EPA,
     # TransformerBlock_3D_EA,
@@ -73,6 +73,11 @@ def get_vit_block(code):
     elif code == 'L': return TransformerBlock_3D_ChannelAtt_ONLY
     elif code == 'Z': return TransformerBlock_DLKA3D_ChannelSequential
     elif code == 'X': return TransformerBlock_DLKA3D_SpatialSequential
+    
+    elif code == 'w': return TransformerBlock_LKA3D_SpatialParallel
+    elif code == 'W': return TransformerBlock_DLKA3D_SpatialParallel
+    elif code == 'u': return TransformerBlock_LKA3D_ChannelNormParallel
+    elif code == 'U': return TransformerBlock_DLKA3D_ChannelParallel
     
     else: raise NotImplementedError(f"Not implemented cnn-block for code:<{code}>")
 

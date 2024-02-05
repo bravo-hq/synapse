@@ -136,10 +136,9 @@ class ChannelAttention_LKA3D(nn.Module):
             self.out = nn.Linear(hidden_size, hidden_size)
         
 
-    def spatial_attention(self, x, special_shape):
-        B, C = x.shape[:2]
-        x_SA = self.lka(x, B, C, *special_shape)
-        if self.use_temperature_sp: 
+    def spatial_attention(self, x, B, C, spatial_shapes):
+        x_SA = self.lka(x, B, C, *spatial_shapes)
+        if self.use_temperature_sp:
             x_SA *= self.temperature_sp
         if self.spatial_attn_drop:
             x_SA = self.attn_drop_sp(x_SA)
@@ -182,8 +181,8 @@ class ChannelAttention_LKA3D(nn.Module):
             x = x_CA.permute(0, 2, 1).reshape(B, C, *special_shape)
         
         # Spatial Attention (LKA3D)
-        x_SA = self.spatial_attention(x, special_shape)
-        
+        x_SA = self.spatial_attention(x, B, C, special_shape)
+
         if self.sequential:
             x = self.out(x_SA)
         else:
@@ -328,9 +327,9 @@ class SpatialAttention_LKA3D(nn.Module):
 # ================================================
 
 
-TransformerBlock_LKA3D_571 = partial(TransformerBlock_LKA3D, ep_block=LKA3D_571_Block)
-TransformerBlock_LKA3D_5731 = partial(TransformerBlock_LKA3D, ep_block=LKA3D_5731_Block)
-TransformerBlock_DLKA3D_single = partial(TransformerBlock_LKA3D, ep_block=DLKA3D_Static_Block)
+TransformerBlock_LKA3D_571 = partial(TransformerBlock_LKA3D, epa_block=LKA3D_571_Block)
+TransformerBlock_LKA3D_5731 = partial(TransformerBlock_LKA3D, epa_block=LKA3D_5731_Block)
+TransformerBlock_DLKA3D_single = partial(TransformerBlock_LKA3D, epa_block=DLKA3D_Static_Block)
 
 
 
@@ -391,7 +390,7 @@ SpatialAttention_LKA3D_parallel = partial(
     lka_attn_drop=0, 
 )
 
-TransformerBlock_LKA3D_SpatialParallel = partial(TransformerBlock_LKA3D, ep_block=SpatialAttention_LKA3D_parallel)
+TransformerBlock_LKA3D_SpatialParallel = partial(TransformerBlock_LKA3D, epa_block=SpatialAttention_LKA3D_parallel)
 
 
 SpatialAttention_DLKA3D_parallel = partial(
@@ -407,7 +406,7 @@ SpatialAttention_DLKA3D_parallel = partial(
     lka_attn_drop=0, 
 )
 
-TransformerBlock_DLKA3D_SpatialParallel = partial(TransformerBlock_LKA3D, ep_block=SpatialAttention_DLKA3D_parallel)
+TransformerBlock_DLKA3D_SpatialParallel = partial(TransformerBlock_LKA3D, epa_block=SpatialAttention_DLKA3D_parallel)
 
 
 ChannelAttention_LKA3D_normParallel = partial(
@@ -420,7 +419,7 @@ ChannelAttention_LKA3D_normParallel = partial(
     sequential=False
 )
 
-TransformerBlock_LKA_ChannelNormParallel = partial(TransformerBlock_LKA3D, epa_block=ChannelAttention_LKA3D_normParallel)    
+TransformerBlock_LKA3D_ChannelNormParallel = partial(TransformerBlock_LKA3D, epa_block=ChannelAttention_LKA3D_normParallel)    
 
 
 ChannelAttention_DLKA3D_parallel = partial(
@@ -433,7 +432,7 @@ ChannelAttention_DLKA3D_parallel = partial(
     sequential=False
 )
 
-TransformerBlock_DLKA3D_ChannelParallel = partial(TransformerBlock_LKA3D, ep_block=ChannelAttention_DLKA3D_parallel)
+TransformerBlock_DLKA3D_ChannelParallel = partial(TransformerBlock_LKA3D, epa_block=ChannelAttention_DLKA3D_parallel)
 
 
 ChannelAttention_LKA3D_tempsphead_parallel = partial(
@@ -447,7 +446,7 @@ ChannelAttention_LKA3D_tempsphead_parallel = partial(
     sequential=False
 )
 
-TransformerBlock_LKA3D_ChannelParallel_tempsphead = partial(TransformerBlock_LKA3D, ep_block=ChannelAttention_LKA3D_tempsphead_parallel)
+TransformerBlock_LKA3D_ChannelParallel_tempsphead = partial(TransformerBlock_LKA3D, epa_block=ChannelAttention_LKA3D_tempsphead_parallel)
 
 
 
@@ -520,7 +519,7 @@ class EPA(nn.Module):
     def no_weight_decay(self):
         return {'temperature', 'temperature2'}
 
-TransformerBlock_3D_EPA = partial(TransformerBlock_LKA3D, ep_block=EPA)
+TransformerBlock_3D_EPA = partial(TransformerBlock_LKA3D, epa_block=EPA)
 
 
 class EfficientAttention(nn.Module):
@@ -593,7 +592,7 @@ class EfficientAttention(nn.Module):
     def no_weight_decay(self):
         return {'temperature', 'temperature2'}
 
-TransformerBlock_3D_EA = partial(TransformerBlock_LKA3D, ep_block=EfficientAttention)
+TransformerBlock_3D_EA = partial(TransformerBlock_LKA3D, epa_block=EfficientAttention)
 
 
 #########################

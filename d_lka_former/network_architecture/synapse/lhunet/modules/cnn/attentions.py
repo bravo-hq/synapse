@@ -151,7 +151,8 @@ class LKA3D_Block(nn.Module):
         self.proj_2 = nn.Conv3d(d_model, d_model, 1)
 
     def forward(self, x, B, C, H, W, D):
-        # x = x.permute(0,2,1).reshape(B, C, H, W, D) # B N C --> B C N --> B C H W D 
+        if x.shape != 5: #[B, N, C]
+            x = x.permute(0,2,1).reshape(B, C, H, W, D) # B N C --> B C N --> B C H W D 
         shortcut = x.clone()
         x = self.proj_1(x)
         x = self.activation(x)
