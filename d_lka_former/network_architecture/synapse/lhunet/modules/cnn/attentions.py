@@ -141,6 +141,22 @@ class DLKA3D_Static(nn.Module):
 
 
 
+class DLKA3D_Block_onTensor(nn.Module):
+    def __init__(self, d_model):
+        super().__init__()
+        self.proj_1 = nn.Conv3d(d_model, d_model, 1)
+        self.activation = nn.GELU()
+        self.spatial_gating_unit = DLKA3D(d_model)
+        self.proj_2 = nn.Conv3d(d_model, d_model, 1)
+
+    def forward(self, x):
+        shortcut = x.clone()
+        x = self.proj_1(x)
+        x = self.activation(x)
+        x = x*self.spatial_gating_unit(x)
+        x = self.proj_2(x)
+        return x
+
 
 class LKA3D_Block(nn.Module):
     def __init__(self, d_model, lka_module=LKA3D_5731):

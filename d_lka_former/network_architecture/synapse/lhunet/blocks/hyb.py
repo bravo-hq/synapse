@@ -37,6 +37,11 @@ from ..modules.vit.blocks import (
     # TransformerBlock_3D_SE,
 )
 
+from ..modules.vit.new import (
+    HybAttn_DLKA3D_Parallel_SpatialViT,
+    HybAttn_DLKA3D_Parallel_ChannelViT
+)
+
 from .base import BaseBlock, get_conv_layer
 from .cnn import get_cnn_block
 
@@ -64,8 +69,8 @@ class TransformerBlock_Deform_LKA_SC_sequential(nn.Module):
 def get_vit_block(code):
     if code == 'c': return TransformerBlock_Deform_LKA_Channel_V2
     elif code == 's': return TransformerBlock_Deform_LKA_Spatial_V2
-    elif code == 'C': return TransformerBlock_Deform_LKA_Channel_sequential
-    elif code == 'S': return TransformerBlock_Deform_LKA_Spatial_sequential
+    # elif code == 'C': return TransformerBlock_Deform_LKA_Channel_sequential
+    # elif code == 'S': return TransformerBlock_Deform_LKA_Spatial_sequential
     elif code == 'R': return TransformerBlock_3D_single_deform_LKA
     elif code == 'B': return TransformerBlock_Deform_LKA_SC_sequential
     
@@ -78,6 +83,9 @@ def get_vit_block(code):
     elif code == 'W': return TransformerBlock_DLKA3D_SpatialParallel
     elif code == 'u': return TransformerBlock_LKA3D_ChannelNormParallel
     elif code == 'U': return TransformerBlock_DLKA3D_ChannelParallel
+    
+    elif code == 'S': return HybAttn_DLKA3D_Parallel_SpatialViT
+    elif code == 'C': return HybAttn_DLKA3D_Parallel_ChannelViT
     
     else: raise NotImplementedError(f"Not implemented cnn-block for code:<{code}>")
 
