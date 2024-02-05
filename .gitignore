@@ -167,3 +167,4 @@ checkpoints
 *.npz
 output
 output_synapse_test_continuing
+OUTPUT

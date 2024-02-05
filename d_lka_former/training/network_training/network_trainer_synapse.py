@@ -539,8 +539,10 @@ class NetworkTrainer_synapse(object):
 
         if len(self.all_val_losses) == 0:
             self.best_loss = 1000
+            self.best_val_metric=-1
         else:
             self.best_loss = self.all_val_losses[-1]
+            self.best_val_metric= self.all_val_eval_metrics[-1]
 
         while self.epoch < self.max_num_epochs:
             self.print_to_log_file("\nepoch: ", self.epoch)
@@ -762,9 +764,36 @@ class NetworkTrainer_synapse(object):
         self.save_best_val_loss_model()
 
         self.update_eval_criterion_MA()
+        
+        self.save_best_val_metric_model() 
+        
         self.maybe_update_lr()
         continue_training = self.manage_patience()
         return continue_training
+
+    def save_best_val_metric_model(self):
+        if self.all_val_eval_metrics[-1] > self.best_val_metric:
+            self.best_val_metric = self.all_val_eval_metrics[-1]
+            # remove old best loss model
+            if self.epoch < 700:
+                path = glob(
+                    join(self.output_folder, f"model_ep_*_best_val_metric_*.model")
+                )
+                path_pkl = glob(
+                    join(self.output_folder, f"model_ep_*_best_val_metric_*.pkl")
+                )
+                for p in path:
+                    os.remove(p)
+                for p in path_pkl:
+                    os.remove(p)
+
+            self.save_checkpoint(
+                join(
+                    self.output_folder,
+                    f"model_ep_{(self.epoch+1):03d}_best_val_metric_{self.all_val_eval_metrics[-1]:.5f}.model",
+                )
+            )
+            self.print_to_log_file(f"best val metric model with dice {self.all_val_eval_metrics[-1]:.5f} saved!!!!!!!!!!!")
 
     def save_best_val_loss_model(self):
         # save best loss model

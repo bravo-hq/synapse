@@ -15,9 +15,7 @@ __all__ = ["LHUNet"]
 Concatenating skips
 Out with ViT
 """
-
 from d_lka_former.network_architecture.neural_network import SegmentationNetwork
-
 
 class LHUNet(SegmentationNetwork):
     def __init__(
