@@ -171,7 +171,8 @@ class HybridEncoder(BaseBlock, BaseHybridBlock):
                         act_name=act_name,
                         dropout=c_do,
                     ), 
-                    nn.MaxPool3d(kernel_size=3, stride=2, padding=1) if c_mp else nn.Identity()   
+                    # nn.MaxPool3d(kernel_size=3, stride=2, padding=1) if c_mp else nn.Identity()
+                    nn.MaxPool3d(kernel_size=c_st, stride=c_st) if c_mp else nn.Identity
                 )
             )
 
