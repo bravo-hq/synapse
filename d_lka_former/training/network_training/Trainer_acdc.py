@@ -1012,10 +1012,12 @@ class Trainer_acdc(NetworkTrainer_acdc):
             ]
             if not np.isnan(i)
         ]
-        self.all_val_eval_metrics.append(np.mean(global_dc_per_class))
+        avg_dc_per_class = np.mean(global_dc_per_class)
+        self.all_val_eval_metrics.append(avg_dc_per_class)
 
         self.print_to_log_file(
-            "Average global foreground Dice:", str(global_dc_per_class)
+            "Average global foreground Dice: ["+", ".join([f"{n*100:2.2f}" for n in global_dc_per_class])+"]"\
+                + f" avg:{100*avg_dc_per_class:2.3f}"
         )
         self.print_to_log_file(
             "(interpret this as an estimate for the Dice of the different classes. This is not "
