@@ -170,3 +170,5 @@ output_synapse_test_continuing
 OUTPUT
 
 outputs
+
+local_*.sh
