@@ -927,7 +927,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
             # classes and then rerun the evaluation. Those classes for which this resulted in an improved dice score will
             # have this applied during inference as well
             self.print_to_log_file("determining postprocessing")
-            determine_postprocessing(
+            test_results=determine_postprocessing(
                 self.output_folder,
                 self.gt_niftis_folder,
                 validation_folder_name,
@@ -963,6 +963,7 @@ class Trainer_synapse(NetworkTrainer_synapse):
                     raise e
 
         self.network.train(current_mode)
+        return test_results
 
     def run_online_evaluation(self, output, target):
         with torch.no_grad():
