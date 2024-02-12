@@ -401,7 +401,9 @@ def determine_postprocessing(
         validation_result_PP_test = load_json(join(folder_per_class, "summary.json"))[
             "results"
         ]["mean"]
-
+        
+        class_check=[1,11,2,3,4,6,7,8]
+        classes_dice=[]
         for c in classes:
             dc_raw = old_res[str(c)]["Dice"]
             dc_pp = validation_result_PP_test[str(c)]["Dice"]
@@ -409,6 +411,8 @@ def determine_postprocessing(
             print(c)
             print("before:", dc_raw)
             print("after: ", dc_pp)
+            if c in class_check:
+                classes_dice.append(max(dc_raw,dc_pp))
 
             if dc_pp > (dc_raw + dice_threshold):
                 pp_results["for_which_classes"].append(int(c))
@@ -423,7 +427,9 @@ def determine_postprocessing(
         print(
             "Only one class present, no need to do each class separately as this is covered in fg vs bg"
         )
-
+        
+    mean_dice = np.mean(classes_dice)
+    
     if not advanced_postprocessing:
         pp_results["min_valid_object_sizes"] = None
 
@@ -482,6 +488,7 @@ def determine_postprocessing(
     p.close()
     p.join()
     print("done")
+    return mean_dice
 
 
 def apply_postprocessing_to_folder(

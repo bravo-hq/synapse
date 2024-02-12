@@ -62,19 +62,19 @@ class LKA3D_5731(nn.Module):
 class DLKA3D(nn.Module):
     def __init__(self, dim):
         super().__init__()
-        if dim in [32, 64]:
+        if dim <17:
             kernel_dwd = 7
             dilation_dwd = 3
             padding_dwd = 9
             kernel_dw = 5
             padding_dw = 2
-        elif dim == 128:
+        elif dim<33:
             kernel_dwd = 5
             dilation_dwd = 3
             padding_dwd = 6
             kernel_dw = 5
             padding_dw = 2
-        elif dim == 256:
+        elif dim <257:
             kernel_dwd = 3
             dilation_dwd = 2
             padding_dwd = 2

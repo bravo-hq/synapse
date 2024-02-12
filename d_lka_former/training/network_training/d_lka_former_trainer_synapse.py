@@ -308,20 +308,20 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             out_channels=self.num_classes,
             do_ds=self.deep_supervision,
             # encoder params
-            cnn_kernel_sizes=[5, 5],
-            cnn_features=[16, 32],
-            cnn_strides=[2, 2],
-            cnn_maxpools=[False, False],
+            cnn_kernel_sizes=[3, 3],
+            cnn_features=[8,16],
+            cnn_strides=[[1,2,2], 2],
+            cnn_maxpools=[True, True],
             cnn_dropouts=0.0,
             cnn_blocks="nn",  # n= resunet, d= deformconv, b= basicunet,
-            hyb_kernel_sizes=[5, 5, 5],
-            hyb_features=[32, 64, 128],
+            hyb_kernel_sizes=[3,3,3],
+            hyb_features=[16, 32, 64],
             hyb_strides=[2, 2, 2],
-            hyb_maxpools=[False, False, False],
+            hyb_maxpools=[True, True, True],
             hyb_cnn_dropouts=0.0,
-            hyb_tf_proj_sizes=[128,64,32],
+            hyb_tf_proj_sizes=[64,32,0],
             hyb_tf_repeats=[1, 1, 1],
-            hyb_tf_num_heads=[8,16,32],
+            hyb_tf_num_heads=[4,8,8],
             hyb_tf_dropouts=0.1,
             hyb_cnn_blocks="nnn",  # n= resunet, d= deformconv, b= basicunet,
             hyb_vit_blocks="SSC",  # s= dlka_special_v2, S= dlka_sp_seq, c= dlka_channel_v2, C= dlka_ch_seq,
@@ -384,6 +384,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         model_flops = flops.total()
         print(f"Total trainable parameters: {round(n_parameters * 1e-6, 4)} M")
         print(f"MAdds: {round(model_flops * 1e-9, 4)} G")
+        self.best_test_dice = 0
 
     def initialize_optimizer_and_scheduler(self):
         assert self.network is not None, "self.initialize_network must be called first"
@@ -759,6 +760,8 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         :return:
         """
         super().on_epoch_end()
+        self.maybe_test()
+        
         continue_training = self.epoch < self.max_num_epochs
 
         # it can rarely happen that the momentum of nnUNetTrainerV2 is too high for some dataset. If at epoch 100 the
@@ -774,6 +777,32 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                     "0.95 and network weights have been reinitialized"
                 )
         return continue_training
+    
+    
+    def maybe_test(self):
+        # if self.epoch>600 and self.all_val_eval_metrics[-1]>0.865:
+            self.network.eval()
+            results=self.validate(
+                    do_mirroring = True,
+                    use_sliding_window = True,
+                    step_size = 0.99, ####################################### YOUSEF HERE
+                    save_softmax = False,
+                    use_gaussian = True,
+                    overwrite = True,
+                    validation_folder_name= "test_raw",
+                    debug = False,
+                    all_in_gpu = False,
+                    segmentation_export_kwargs = None,
+                    run_postprocessing_on_folds = True)
+            if results>self.best_test_dice:
+                self.save_checkpoint(
+                join(
+                    self.output_folder,
+                    f"model_ep_{(self.epoch+1):03d}_best_test_dice_{results:.5f}.model",
+                ))
+                self.best_test_dice=results
+                            
+            self.network.train()
 
     def run_training(self):
         """
