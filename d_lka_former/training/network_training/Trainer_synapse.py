@@ -158,7 +158,8 @@ class Trainer_synapse(NetworkTrainer_synapse):
 
         self.batch_dice = batch_dice
         self.loss = DC_and_CE_loss(
-            {"batch_dice": self.batch_dice, "smooth": 1e-5, "do_bg": False}, {}
+            {"batch_dice": self.batch_dice, "smooth": 1e-5, "do_bg": False}, {},
+            weight_ce=0.35, weight_dice=0.65
         )
 
         self.online_eval_foreground_dc = []
