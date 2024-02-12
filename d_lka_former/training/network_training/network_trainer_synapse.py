@@ -541,8 +541,8 @@ class NetworkTrainer_synapse(object):
             self.best_loss = 1000
             self.best_val_metric=-1
         else:
-            self.best_loss = self.all_val_losses[-1]
-            self.best_val_metric= self.all_val_eval_metrics[-1]
+            self.best_loss = min(self.all_val_losses)
+            self.best_val_metric= max(self.all_val_eval_metrics)
 
         while self.epoch < self.max_num_epochs:
             self.print_to_log_file("\nepoch: ", self.epoch)
