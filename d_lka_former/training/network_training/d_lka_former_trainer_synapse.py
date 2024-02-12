@@ -382,8 +382,8 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         )
         flops = FlopCountAnalysis(self.network, input)
         model_flops = flops.total()
-        print(f"Total trainable parameters: {round(n_parameters * 1e-6, 4)} M")
-        print(f"MAdds: {round(model_flops * 1e-9, 4)} G")
+        self.print_to_log_file(f"Total trainable parameters: {round(n_parameters * 1e-6, 4)} M")
+        self.print_to_log_file(f"MAdds: {round(model_flops * 1e-9, 4)} G")
         self.best_test_dice = 0
 
     def initialize_optimizer_and_scheduler(self):
