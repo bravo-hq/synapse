@@ -785,13 +785,13 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             results=self.validate(
                     do_mirroring = True,
                     use_sliding_window = True,
-                    step_size = 0.99, ####################################### YOUSEF HERE
+                    step_size = 1, ####################################### YOUSEF HERE
                     save_softmax = False,
                     use_gaussian = True,
                     overwrite = True,
                     validation_folder_name= "test_raw",
                     debug = False,
-                    all_in_gpu = False,
+                    all_in_gpu = True,
                     segmentation_export_kwargs = None,
                     run_postprocessing_on_folds = True)
             if results>self.best_test_dice:
