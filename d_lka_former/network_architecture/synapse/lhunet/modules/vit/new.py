@@ -76,6 +76,7 @@ class AttBlock_ViT_Parallel_DLKA3D(nn.Module):
     def forward(self, x):
         x_lka = self.delta * self.lka(x)
         x_vit = self.gamma * self.vit_attn(x)
+        # x = x+ x_lka + x_vit
         x = x * (1 + x_lka + x_vit)
         x = self.bnorm(x)
         x = x + self.conv1(self.conv3(x))

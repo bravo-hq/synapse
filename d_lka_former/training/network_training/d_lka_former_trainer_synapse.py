@@ -783,7 +783,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
     
     
     def maybe_test(self):
-        if self.epoch>-1 and self.all_val_eval_metrics[-1]>0.86:
+        if self.epoch>750 and self.all_val_eval_metrics[-1]>0.86:
             self.network.eval()
             results=self.validate(
                     do_mirroring = True,
@@ -804,7 +804,10 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
                     f"model_ep_{(self.epoch+1):03d}_best_test_dice_{results:.5f}.model",
                 ))
                 self.best_test_dice=results
-                            
+            
+            self.print_to_log_file(
+                f"Test Dice: {results:.5f}, Best Test Dice: {self.best_test_dice:.5f}"
+            )                
             self.network.train()
 
     def run_training(self):
