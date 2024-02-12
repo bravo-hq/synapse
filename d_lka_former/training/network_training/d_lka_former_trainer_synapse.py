@@ -780,7 +780,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
     
     
     def maybe_test(self):
-        # if self.epoch>600 and self.all_val_eval_metrics[-1]>0.865:
+        if self.epoch>600 and self.all_val_eval_metrics[-1]>0.865:
             self.network.eval()
             results=self.validate(
                     do_mirroring = True,
