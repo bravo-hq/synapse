@@ -90,12 +90,12 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 0.007  ############################# YOUSEF HERE
+        self.initial_lr = 0.0006  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
         self.load_pretrain_weight = False
-        self.fine_tune = False
+        self.fine_tune = True
 
         self.load_plans_file()
 
@@ -362,7 +362,10 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
 
         if self.fine_tune:
             print("Loading pretrain weight")
-            pre_trained_path = "/cabinet/yousef/synapse/output_synapse_test_lhunet_res_coll_lr_0.007/d_lka_former/3d_fullres/Task002_Synapse/d_lka_former_trainer_synapse__d_lka_former_Plansv2.1/fold_0/originals/model_final_checkpoint.model"
+            base_folder = "/scratch/deeplearning/yousef/synapse"
+            folder = f"{base_folder}/outputs/synapse_test_lhunetv8_ds0_res_coll_SSCnew_CE.3DC.7_feats816243264_b2_lr.003_h8816_do.1_stride12222_mpT5"
+            checkpoint = "originals/model_ep_947_best_val_metric_0.87510.model"
+            pre_trained_path = f"{folder}/d_lka_former/3d_fullres/Task002_Synapse/d_lka_former_trainer_synapse__d_lka_former_Plansv2.1/fold_0/{checkpoint}"
             saved_model = torch.load(pre_trained_path, map_location=torch.device("cpu"))
             self.network.load_state_dict(saved_model["state_dict"])
             print("Done loading pretrain weight")
@@ -780,7 +783,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
     
     
     def maybe_test(self):
-        if self.epoch>600 and self.all_val_eval_metrics[-1]>0.865:
+        if self.epoch>-1 and self.all_val_eval_metrics[-1]>0.86:
             self.network.eval()
             results=self.validate(
                     do_mirroring = True,
