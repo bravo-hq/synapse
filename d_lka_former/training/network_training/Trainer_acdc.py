@@ -158,7 +158,7 @@ class Trainer_acdc(NetworkTrainer_acdc):
         self.batch_dice = batch_dice
         self.loss = DC_and_CE_loss(
             {"batch_dice": self.batch_dice, "smooth": 1e-5, "do_bg": False}, {},
-            weight_ce=0.8, weight_dice=1.2
+            weight_ce=1, weight_dice=1
         )
 
         self.online_eval_foreground_dc = []
@@ -923,7 +923,7 @@ class Trainer_acdc(NetworkTrainer_acdc):
             # classes and then rerun the evaluation. Those classes for which this resulted in an improved dice score will
             # have this applied during inference as well
             self.print_to_log_file("determining postprocessing")
-            determine_postprocessing(
+            test_results=determine_postprocessing(
                 self.output_folder,
                 self.gt_niftis_folder,
                 validation_folder_name,
@@ -959,6 +959,7 @@ class Trainer_acdc(NetworkTrainer_acdc):
                     raise e
 
         self.network.train(current_mode)
+        return test_results
 
     def run_online_evaluation(self, output, target):
         with torch.no_grad():
