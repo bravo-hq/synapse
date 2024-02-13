@@ -68,7 +68,7 @@ class DLKA3D(nn.Module):
             padding_dwd = 9
             kernel_dw = 5
             padding_dw = 2
-        if dim < 65:
+        elif dim < 65:
             kernel_dwd = 5
             dilation_dwd = 3
             padding_dwd = 6
