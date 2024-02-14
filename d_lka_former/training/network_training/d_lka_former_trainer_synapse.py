@@ -95,7 +95,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         self.ds_loss_weights = None
         self.pin_memory = True
         self.load_pretrain_weight = False
-        self.fine_tune = True
+        self.fine_tune = False
 
         self.load_plans_file()
 
@@ -309,13 +309,13 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             do_ds=self.deep_supervision,
             # encoder params
             cnn_kernel_sizes=[3, 3],
-            cnn_features=[8, 16],
+            cnn_features=[12, 16],
             cnn_strides=[[1,2,2], 2],
             cnn_maxpools=[True, True],
             cnn_dropouts=0.0,
             cnn_blocks="nn",  # n= resunet, d= deformconv, b= basicunet,
             hyb_kernel_sizes=[3, 3, 3],
-            hyb_features=[24, 32, 64],
+            hyb_features=[32, 64,128],
             hyb_strides=[2, 2, 2],
             hyb_maxpools=[True, True, True],
             hyb_cnn_dropouts=0.0,
