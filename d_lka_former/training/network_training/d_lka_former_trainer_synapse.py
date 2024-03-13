@@ -54,6 +54,10 @@ from d_lka_former.network_architecture.synapse.lhunet.models.v7 import (
     LHUNet as LHUNet_v7,
 )
 
+from d_lka_former.network_architecture.synapse.lhunet.models.v9 import (
+    LHUNet as LHUNet_v9,
+)
+
 
 
 class d_lka_former_trainer_synapse(Trainer_synapse):
@@ -90,7 +94,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             seed=seed,
         )
         self.max_num_epochs = 1000
-        self.initial_lr = 0.0006  ############################# YOUSEF HERE
+        self.initial_lr = 0.003  ############################# YOUSEF HERE
         self.deep_supervision_scales = None
         self.ds_loss_weights = None
         self.pin_memory = True
@@ -302,7 +306,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
         #     do_ds= False,
         # )
 
-        self.network = LHUNet_v8(
+        self.network = LHUNet_v7(
             spatial_shapes=self.crop_size,
             in_channels=self.input_channels,
             out_channels=self.num_classes,
@@ -788,7 +792,7 @@ class d_lka_former_trainer_synapse(Trainer_synapse):
             results=self.validate(
                     do_mirroring = True,
                     use_sliding_window = True,
-                    step_size = 1, ####################################### YOUSEF HERE
+                    step_size = 0.99, ####################################### YOUSEF HERE
                     save_softmax = False,
                     use_gaussian = True,
                     overwrite = True,
